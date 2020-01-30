@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Custom element scoped translations | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2017/04/binoculars-1209892_1280.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2017-04-25T18:52:20.103Z" itemprop="datePublished">
+          2017-04-25
+      </time>
+    
+</span>
+    
+    <h1 class="post-title">
+      Custom element scoped translations
+    </h1>
+    <section class="post-content">
+      <p>Component oriented development definitely is no novelty in these days. A lot of frameworks like Aurelia, React, Angular and all the others do support it nicely. One of the ideas of that approach is to make components self-aware about their intention and fully encapsulated. Data is sent into components via inputs, props, bindables — similar concepts just different names from the frameworks out there — and that is rendered using some component internal UI logic.</p>
+<p>That’s all fine but another aspect are auxiliary information. A component representing a page in a SPA might store and configure the route by itself. Contrary to what Angular does with <a href="https://toddmotto.com/angular-component-router" target="_blank" rel="noopener">its router</a>, but fully ok with other frameworks. One benefit of that is simpler partial/lazy app loading. Another example is CSS, which is directly tied to a specific component. This approach has <a href="https://github.com/styled-components/styled-components" target="_blank" rel="noopener">great momentum</a> in the <a href="https://github.com/threepointone/glamor" target="_blank" rel="noopener">React community</a> and with the advent of <a href="https://github.com/css-modules/css-modules" target="_blank" rel="noopener">CSS Modules</a> might be a good universal fit.</p>
+<p>We call those things scoped resources/settings as they are directly related to a component. Now, what if we could do the same with translation resources?</p>
+<h2 id="Separating-translations-by-namespaces"><a href="#Separating-translations-by-namespaces" class="headerlink" title="Separating translations by namespaces"></a>Separating translations by namespaces</h2><p>If you haven’t yet, this is the perfect time to take a look at <a href="https://github.com/aurelia/i18n" target="_blank" rel="noopener">Aurelia’s I18N Plugin</a> and the <a href="http://aurelia.io/hub.html#/doc/article/aurelia/i18n/latest/i18n-with-aurelia" target="_blank" rel="noopener">docs section</a> on how to get started. It wraps the fantastic <a href="i18next.com">i18next</a> library which offers amongst others a great way to structure your translations by using <a href="http://i18next.com/translate/namespace/" target="_blank" rel="noopener">namespaces</a>. With this, you can not only split translations into various files but also spaces.</p>
+<p>So when you start, following the tutorial section in the hub, you’ll end up with a file called <code>translation.json</code>, created for each respective language your app supports. This file resembles the default namespace <code>translation</code>. Your full resources structure might look as follows, given you support the locales <code>en-US</code> and <code>de-DE</code>:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"en-US"</span>: &#123;</span><br><span class="line">    <span class="attr">"translation"</span>: &#123;</span><br><span class="line">      <span class="attr">"title"</span>: <span class="string">"Hello from Aurelia"</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"de-DE"</span>: &#123;</span><br><span class="line">    <span class="attr">"translation"</span>: &#123;</span><br><span class="line">      <span class="attr">"title"</span>: <span class="string">"Hallo von Aurelia"</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>As you see the structure contains the locale on the top level, followed by the default namespace. What we would like to achieve now is to give each custom element it’s custom namespace. So for a custom element named <code>MyElement</code> that should end up being something like follows:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"en-US"</span>: &#123;</span><br><span class="line">    <span class="attr">"translation"</span>: &#123;</span><br><span class="line">      <span class="attr">"title"</span>: <span class="string">"Hello from Aurelia"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"MyElement: &#123;</span></span><br><span class="line"><span class="attr">     ... // translation keys with en-US locale</span></span><br><span class="line"><span class="attr">    &#125;</span></span><br><span class="line"><span class="attr">  &#125;,</span></span><br><span class="line">  "de-DE": &#123;</span><br><span class="line">    "translation": &#123;</span><br><span class="line">      "title": "Hallo von Aurelia"</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">"MyElement: &#123;</span></span><br><span class="line"><span class="string">     ... // translation keys with de-DE locale</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">  &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<h2 id="Scoped-translation-resources"><a href="#Scoped-translation-resources" class="headerlink" title="Scoped translation resources"></a>Scoped translation resources</h2><p>To keep the translation parts now inline with the custom element we’ll be using a decorator called <code>scopedI18N</code> like this in our elements ViewModel <code>my-element.js</code>:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123;scopedI18N&#125; <span class="keyword">from</span> <span class="string">'./scoped-i18n'</span>;</span><br><span class="line"></span><br><span class="line">@scopedI18N(&#123;</span><br><span class="line">  de-DE: &#123;</span><br><span class="line">    greeting: <span class="string">'Hallo!'</span>,</span><br><span class="line">    info: <span class="string">'Du siehst hier komponentengebundene Übersetzungen'</span></span><br><span class="line">  &#125;,</span><br><span class="line">  en-US: &#123;</span><br><span class="line">    greeting: <span class="string">'Hi there!'</span>,</span><br><span class="line">    info: <span class="string">'You\'re seeing scoped component translations'</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br><span class="line"><span class="keyword">export</span> <span class="class"><span class="keyword">class</span> <span class="title">MyElement</span> </span>&#123;</span><br><span class="line">  <span class="keyword">constructor</span>() &#123;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The decorator accepts an object, which defines locales in the first and your translation keys in the second level. After that, you can use those keys in the custom elements view <code>my-element.html</code> by prefixing the key with the custom elements namespace, by default the elements class name.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h1</span>&gt;</span>$&#123; 'MyElement:greeting' &amp; t &#125;<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">span</span> <span class="attr">t</span>=<span class="string">"MyElement:info"</span>&gt;</span>...<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="Building-the-scopedI18N-decorator"><a href="#Building-the-scopedI18N-decorator" class="headerlink" title="Building the scopedI18N decorator"></a>Building the scopedI18N decorator</h2><p>Last but not least it’s time to build the decorator. We’ll do so creating a file <code>scoped-i18n.js</code>:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; Container &#125; <span class="keyword">from</span> <span class="string">'aurelia-framework'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; I18N &#125; <span class="keyword">from</span> <span class="string">'aurelia-i18n'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">scopedI18N</span>(<span class="params">translations</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">target</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> i18nService = Container.instance.get(I18N);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">Object</span>.keys(translations).forEach( <span class="function">(<span class="params">lng</span>) =&gt;</span> &#123;</span><br><span class="line">      i18nService.i18next.addResources(lng, target.name, translations[lng]);</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Let’s go through the code step by step.</p>
+<p>First, we are importing Aurelia’s IOC Container alongside the I18N service from the plugin.<br>Next, we have to create and export the decorator, which essentially is a higher-order function named <code>scopedI18N</code>, accepting an attribute called <code>translations</code>. This shell returns a function accepting the <code>class target</code> which we’re applying our decorator to. In here we now can use the IOC container to get an instance of the i18n service.<br>Last but not least we’ll iterate over the provided translation object. Remember the first level keys are the locales we’re using.<br>We’re going to use the i18next reference, provided by the service in order to add resources which we do for each locale, using the target’s name as namespace and applying the contents of the respective locale.</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>And that’s it. With these few lines, we’ve created a nice and concise way to add scoped translations to any component. With this, you can now not only have your CSS and View but also your translations scoped to your custom element.</p>
+<p>photo credit: <a href="https://pixabay.com/de/ferngl%C3%A4ser-blick-fokus-optische-1209892/" target="_blank" rel="noopener">Unsplash: Binoculars</a> via <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.de" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/custom-element-scoped-translations/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/custom-element-scoped-translations/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/custom-element-scoped-translations/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/using-a-state-container-with-aurelia/">
+        ← Using a state container with Aurelia
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/basta-2017-frankfurt-talk/">
+        BASTA 2017 Frankfurt Talk →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

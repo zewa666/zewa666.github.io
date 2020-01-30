@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>From Angular to Aurelia Part 3: Value Converters | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2015/04/3937050845_37c5233ac9_o-2.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2015-04-25T10:47:29.470Z" itemprop="datePublished">
+          2015-04-25
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>,
+    
+    <a href="/tags/angular-1-x/">angular-1-x</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      From Angular to Aurelia Part 3: Value Converters
+    </h1>
+    <section class="post-content">
+      <p>This is the third part of the From Angular to Aurelia Series. In the <a href="http://pragmatic-coder.net/from-angular-to-aurelia-part-2-services/">previous post</a> we looked at how Services are used in Angular and their counterpart in Aurelia. This post focuses on Value Converters (VC), which are known as Filters in the world of Angular.</p>
+<h2 id="Transforming-binding-outputs"><a href="#Transforming-binding-outputs" class="headerlink" title="Transforming binding outputs"></a>Transforming binding outputs</h2><p>The sole reason of Value Converters is to transform data-streams from bindings, either from the Model to the View or the other way around. That way you can decoratively transform your data step-wise and adapt it to the requirements of your View, without having to modify the underlying original data-source itself. Filters and VCs might be used on every binding but do get used most often in combination with repeaters, where you want to transform the representation of a list of items. Imagine features like sorting, filtered views and so on.</p>
+<h2 id="Filters-in-Angular"><a href="#Filters-in-Angular" class="headerlink" title="Filters in Angular"></a>Filters in Angular</h2><p>The syntax to use filters in Angular looks like this:<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  &lt;li ng-repeat=<span class="string">"transaction in transactions"</span>&gt;&#123;&#123;item | currency:<span class="string">"€"</span>&#125;&#125; &lt;<span class="regexp">/li&gt;</span></span><br><span class="line"><span class="regexp">&lt;/u</span>l&gt;</span><br></pre></td></tr></table></figure></p>
+<p>You place a pipe <code>|</code> after your expression, which forwards the value as the first argument to the filter. Additional arguments may be provided by prefixing them with a colon. The above is a predefined <code>currency-filter</code> responsible for displaying a given number along with a currency symbol.</p>
+<p>In order to register a custom filter the <code>app-module</code> object offers the method <code>filter</code>. This takes the name of the filter as first parameter, followed by a factory function returning the filters body. This inner function contains at least one argument, being the provided value to transform. In the functions body you do your magic and return the transformed data.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">app.filter(<span class="string">'myFilter'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> value + <span class="string">" transformed!!!"</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>The respective call in your markup would be:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">p</span>&gt;</span>&#123;&#123;'My data' | myFilter &#125;&#125;<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">// results in</span><br><span class="line"><span class="tag">&lt;<span class="name">p</span>&gt;</span>My data transformed!!!<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="Parsers-and-Formatters"><a href="#Parsers-and-Formatters" class="headerlink" title="Parsers and Formatters"></a>Parsers and Formatters</h2><p>That way we covered the way from the VM, respectively Controller, to the View. That works great for normal bindings. But if we need to work with form elements, which act two way you have to leverage a different mechanism called <code>$parsers/$formatters</code>. An example for this might be an input field where we’d like the user to input his name and automatically prefix it with a GitHub like @ sign, but actually store the clean name. </p>
+<p>In order to do so Angular requires you to create a custom directive. In there you declare the dependency on the <code>ngModel</code>, which is a Service used with form elements. In the <code>link phase</code> you need to get hold of the Controller to attach the mentioned <code>$formatters</code> — used for the view display — and the <code>$parser</code> — used for parsing data back to the controller.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">app.directive(<span class="string">'github'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="built_in">require</span>: <span class="string">'ngModel'</span>,</span><br><span class="line">    link: <span class="function"><span class="keyword">function</span>(<span class="params">scope, elm, attrs, ctrl</span>) </span>&#123;</span><br><span class="line">      <span class="comment">//format text going to user (model to view)</span></span><br><span class="line">      ctrl.$formatters.push(<span class="function"><span class="keyword">function</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"@"</span> + value;</span><br><span class="line">      &#125;);</span><br><span class="line">    </span><br><span class="line">      <span class="comment">//format text from the user (view to model)</span></span><br><span class="line">      ctrl.$parsers.push(<span class="function"><span class="keyword">function</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> value.replace(<span class="string">"@"</span>, <span class="string">''</span>);</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>The markup would look like this, where the <code>p</code> tag below the input element shows you that the parsing properly did its job:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">body</span> <span class="attr">ng-controller</span>=<span class="string">"MainCtrl"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">form</span> <span class="attr">name</span>=<span class="string">"form"</span> <span class="attr">class</span>=<span class="string">"css-form"</span> <span class="attr">novalidate</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> <span class="attr">ng-model</span>=<span class="string">"inputValue"</span> <span class="attr">github</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">p</span>&gt;</span>&#123;&#123; inputValue &#125;&#125;<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>You can see the full example in <a href="http://plnkr.co/edit/lK981EbUoKnncQp71I8r?p=preview" target="_blank" rel="noopener">this plunker</a>.</p>
+<h2 id="The-Aurelia-Way"><a href="#The-Aurelia-Way" class="headerlink" title="The Aurelia Way"></a>The Aurelia Way</h2><p>So far I hope you’ve already realized that most of the things done in Aurelia follow a certain convention and always focus on the developer experience. A ValueConverter, which’s naming actually feels more consistent compared to filter, is used in the same way like Angulars Filters:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">p</span>&gt;</span>$&#123;'My data' | myFilter &#125;<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">// results in</span><br><span class="line"><span class="tag">&lt;<span class="name">p</span>&gt;</span>My data transformed!!!<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>In order to create a custom ValueConverter you create and export a new class, following Aurelias convention of [Name]ValueConverter:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//File: my-filter.js</span></span><br><span class="line"><span class="keyword">export</span> <span class="class"><span class="keyword">class</span> <span class="title">MyFilterValueConverter</span> </span>&#123;</span><br><span class="line">  toView(value) &#123;</span><br><span class="line">    <span class="keyword">return</span> value + <span class="string">" transformed!!!"</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>You’d have to either import the VC locally in your View or register it globally. First is done by adding this somewhere in your Views markup:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">require</span> <span class="attr">from</span>=<span class="string">"./my-filter"</span>&gt;</span><span class="tag">&lt;/<span class="name">require</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>the latter by registering the ValueConverter via the <code>aurelia</code> object during custom bootstrapping:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">configure</span>(<span class="params">aurelia</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(aurelia);</span><br><span class="line">  aurelia.use</span><br><span class="line">    .standardConfiguration()</span><br><span class="line">    .developmentLogging();</span><br><span class="line"></span><br><span class="line">  aurelia.globalizeResources(<span class="string">'./my-filter'</span>);</span><br><span class="line"></span><br><span class="line">  aurelia.start().then(<span class="function"><span class="params">a</span> =&gt;</span> a.setRoot(<span class="string">'app'</span>, <span class="built_in">document</span>.body));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>As for the way back with input elements, I have good news. Stick with one concept instead of learning new things. The GitHub Filter would look like this as a Aurelia VC:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// File: github.js</span></span><br><span class="line"><span class="keyword">export</span> <span class="class"><span class="keyword">class</span> <span class="title">GithubValueConverter</span> </span>&#123;</span><br><span class="line">  toView(value) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"@"</span> + value;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  fromView(value) &#123;</span><br><span class="line">    <span class="keyword">return</span> value.replace(<span class="string">"@"</span>, <span class="string">''</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>As you see per convention you just implement another hook called <code>fromView</code> which intercepts the write-backs from the input to the property. In your View markup you now may keep using the VC even on input elements:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> <span class="attr">value.bind</span>=<span class="string">"inputValue | github"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">p</span>&gt;</span>$&#123; inputValue &#125;<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>I hope to have been able to highlight one of Aurelias key concepts, which is not getting in your way and letting you focus on productivity. This is achieved by not introducing several concepts for similar tasks.<br>There are more features we haven’t looked at here. If you’re interested I highly recommend the official <a href="http://blog.durandal.io/2015/02/23/binding-with-value-converters-in-aurelia/" target="_blank" rel="noopener">blog post</a> by core team member Jeremy Danyow, which will walk you through additional features like chained VCs, object parameters and a bunch of cool examples.</p>
+<p><small>Photo credit: <a href="http://www.flickr.com/photos/8383928@N06/3937050845" target="_blank" rel="noopener">The Forgotten Memories Theatre</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a> <a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener">(license)</a></small></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/from-angular-to-aurelia-part-3-value-converters/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/from-angular-to-aurelia-part-3-value-converters/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/from-angular-to-aurelia-part-3-value-converters/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/grazjs-6/">
+        ← GrazJS #6
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/from-angular-to-aurelia-part-2-services/">
+        From Angular to Aurelia Part 2: Services →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Unit testing bug in the Skeleton Navigation app | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2015/03/2297814714_c5c42dc0de_o.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2015-03-29T15:08:46.700Z" itemprop="datePublished">
+          2015-03-29
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Unit testing bug in the Skeleton Navigation app
+    </h1>
+    <section class="post-content">
+      <p>A recent update of the <a href="https://github.com/aurelia/skeleton-navigation" target="_blank" rel="noopener">Skeleton Navigation App</a> introduced changes to how the JSPM config.js file is setup. More specifically it’s all about the <code>paths.*</code> setting. The listing below depicts the new change.</p>
+<pre>
+System.config({
+  "paths": {
+    <b style="font-size:18px">"*": "dist/*.js",</b>
+    "github:*": "jspm_packages/github/*.js",
+    "npm:*": "jspm_packages/npm/*.js",
+    "aurelia-skeleton-navigation/*": "dist/*.js"
+  }
+});
+</pre>
+
+<p>So as you see it points now all general import requests towards the <code>dist</code> folder, containing the compiled ES5 version of your code.</p>
+<p>Sadly though this interferes with the way how Karma is loading JSPM resources in order to execute the test suite. A current workaround is to modify the source of <a href="https://github.com/Workiva/karma-jspm" target="_blank" rel="noopener">karma-jspm</a>. In order to do so do the following:</p>
+<ol>
+<li>Open the file <code>node_packages/karma-jspm/src/adapter.js</code> </li>
+<li>At around line 38 after the config of the <code>baseURL</code> insert following override:</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// Overriding * path mapping</span><br><span class="line">System.config(&#123;</span><br><span class="line">  paths: &#123;</span><br><span class="line">    &apos;*&apos;: &apos;*.js&apos;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>That should get you going in the meantime until an <a href="https://github.com/Workiva/karma-jspm/pull/47" target="_blank" rel="noopener">official solution</a> is available. </p>
+<p><small><br>Photo credit: <a href="http://www.flickr.com/photos/81185127@N00/2297814714" target="_blank" rel="noopener">dead fly</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a> <a href="https://creativecommons.org/licenses/by-nd/2.0/" target="_blank" rel="noopener">(license)</a></small></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/unit-testing-bug-in-the-skeleton-navigation-app/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/unit-testing-bug-in-the-skeleton-navigation-app/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/unit-testing-bug-in-the-skeleton-navigation-app/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/yeoman-generator-perform-automatic-npm-install/">
+        ← Yeoman Generator: perform automatic npm install
+    </a>
+    
+    <span class="page-number">•</span>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

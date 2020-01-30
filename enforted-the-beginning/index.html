@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Enforted - A board game built with Aurelia | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2020/01/enforted_logo.png)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2020-01-29T21:14:22.000Z" itemprop="datePublished">
+          2020-01-29
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>,
+    
+    <a href="/tags/enforted/">enforted</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Enforted - A board game built with Aurelia
+    </h1>
+    <section class="post-content">
+      <p>Before we start, hold right there for a moment and think about what brought you to software development. I’m quite sure a large part of you is going to have a similar thought like me and that is the chance to once in a distant future, build your very own game. Now if that is what grinds your gears keep on reading this intro article, where I’m going to tell you about made me start working on Enforted, a board game built with the Aurelia Framework. If you’re more interested in the technical details you might as well skip to opening and zoom down to the end of the article where I’ll be laying out what upcoming articles are going to handle. Or if you say, screw this I just wanna play a round, visit the game over at <a href="https://pragmatic-coder.net/enforted">https://pragmatic-coder.net/enforted</a>. Keep in mind it is a work in progress so you might end up in an unbalanced situation.r</p>
+<h2 id="Why-the-heck-a-game-in-the-browser-with-HTML-and-CSS"><a href="#Why-the-heck-a-game-in-the-browser-with-HTML-and-CSS" class="headerlink" title="Why the heck a game in the browser with HTML and CSS?"></a>Why the heck a game in the browser with HTML and CSS?</h2><p>You might ask yourself, why is this dude building a game in the browser with JS, HTML, and CSS when he could use a proper language and optimized targets like a desktop or mobile app instead? The truth to that is that I simply love working with the web. It is the place where I feel I’m creative and able to express whatever I may come to think of. But besides that, there is a very particular reason that might not be obvious from the beginning.</p>
+<p>If you’re using the web to build classic forms driven applications, like a line of business app or yet another shop frontend next to that wonderful portfolio page you had right there in your mind you will find that you’re tackling a similar problem with every project. That is not to say that those types of projects are imminently boring per se, but I often felt locked into that fortress of “we’ve already got a solution for that”.</p>
+<p>My current job, on the other hand, is something very different. I’m a team lead for a product called <a href="https://www.webtestit.com" target="_blank" rel="noopener">Ranorex Webtestit</a>, which essentially is a whole IDE, built with Electron and Aurelia, focusing on writing maintainable Selenium E2E tests. I’ll admit that I’ve never built something of that size before and certainly not with the type of challenges you’re seeing there, such as the Language Server protocoll or native node dependencies. But what I pretty much learned from day one working on that project was that you’re immediately facing a whole set of new opportunities to learn new things. There are no two forms that look or act the same, every feature has a whole different level of complexity - add linter support for Java/Python projects vs. Websocket communication with a Chrome extension - I hope you see my point.</p>
+<p>While that satisfies my exploratory heart to a great degree, there still have been some parts I haven’t yet touched in detail for the last few years:</p>
+<ul>
+<li>Get to learn FlexBox a little bit better</li>
+<li>Build my first PWA</li>
+<li>Explore new possibilities for writing tests first</li>
+<li>See how far one can go without a backend</li>
+</ul>
+<p>So to learn those, I could have read a bunch of articles - which I did - and put that aside. But that’s not the way how I learn things. I need to put things into practical use to grasp the concept. And so it came that building a game offered me a ton of new challenges which would open up the opportunity to try out and learn the above things.</p>
+<h2 id="About-the-Game-a-weird-crossover-of-Monopoly-like-and-Tower-Defense"><a href="#About-the-Game-a-weird-crossover-of-Monopoly-like-and-Tower-Defense" class="headerlink" title="About the Game, a weird crossover of Monopoly-like and Tower Defense."></a>About the Game, a weird crossover of Monopoly-like and Tower Defense.</h2><p>Thank you for staying with me so far, now lets finally talk about Enforted. Lately, on the Aurelia private Discord channel, I saw a lot of conversation about board games. There have been great examples such as <a href="https://boardgamegeek.com/boardgame/295770/frosthaven" target="_blank" rel="noopener">Frosthaven</a> or <a href="https://boardgamegeek.com/boardgame/192153/pandemic-reign-cthulhu" target="_blank" rel="noopener">Pandemic: Reign of Cthulhu</a> which honestly said look insanely great. So that made my choice of building a board game set. But in reality, I didn’t play a lot of these yet aside from Chess, Settlers of Catan and … Monopoly, or the Austrian version <a href="https://www.boardgamegeek.com/boardgame/9079/das-kaufmannische-talent" target="_blank" rel="noopener">DKT - Das kaufmännische Talent</a>. But building a Monopoly clone for the web just seemed boring. So another type of games I’ve enjoyed back in the Warcraft 3 era, were these Tower Defense custom maps. Long story short, I thought why not combine both and that was the moment Enforted was born.</p>
+<p>As you can see in the screenshot below, the board consists of two lanes of resource tiles, being Wood, Food, Stone, Gold, Iron, Mana, Coal, and Blood. The player progresses by rolling the dice to the upper left. Once a tile is reached you can buy a tile building - e.g a farm or sawmill - which will produce resources after a successful round. There is no such concept of having a full street of collocated tiles such as in Monopoly, every tile stands for itself. Besides resource tiles, you’ll notice those graveyardy things such as the lower left thingy. Those are kinda resembling the idea of train stations in Monopoly where having multiple of those you’d get additional benefits applied over time. The two fire rings are a special non-interactive type as they get activated per round if a magician tower - as seen in the center, the fortress - exists and enough mana is available. Those would kill monsters with one hit if active. Last but not least those sad faces are so-called tragedy tiles, which are similar to event cards in Monopoly, with the exception that they only, as the name suggests, cause tragedies to appear. Those range from a random fire burning down one of your tile buildings to going back to start because you forgot your equipment.<br><img src="/content/images/2020/01/enforted-overview.png" alt="Overview of the game"><br>Last but not least, the board’s center depicts the fortress, which you can build up with additional constructs, built by stepping on the saws in the lower left of the inner circle. These will produce so-called stats, being Population, Soldiers, and Defense. The first acts as your health points. Once a monster arrives at the gates, their subsequent dice rolls will determine, together with other measures, how much damage they deal. That is countered with the defense rate plus the number of soldiers stationed in the fortress. If the monster wins the roll, you’ll end up losing one population. If you end up having none left the game is over. Last but not least, soldiers can also be used to man tile buildings to deal additional damage when monsters step onto.</p>
+<h2 id="Enough-talking-what-about-the-technical-part"><a href="#Enough-talking-what-about-the-technical-part" class="headerlink" title="Enough talking, what about the technical part?"></a>Enough talking, what about the technical part?</h2><p>Chances are you’re a Developer reading this. So I get it, it’s finally about time to get started with the technical side of things. I must disappoint you though, that ain’t gonna be part of this intro article as there is much to be said. So what you’re gonna find in the upcoming articles is the following.</p>
+<h3 id="Game-state-management-with-Aurelia-Store"><a href="#Game-state-management-with-Aurelia-Store" class="headerlink" title="* Game state management with Aurelia Store"></a>* Game state management with Aurelia Store</h3><p>A board game is a perfect opportunity for using a state management library. Due to the non-realtime nature of dice rolling you have a determined state every time depicting what buildings are placed, where monsters and the player’s character are located as well as an overview of stats and resources. With this one, we’re going to dive into how the store is used in Enforted, how actions are structured and how the game can be easily resumed on your next session thanks to the middleware approach.</p>
+<h3 id="UI-shenanigans-with-SCSS-BEM-and-Flex"><a href="#UI-shenanigans-with-SCSS-BEM-and-Flex" class="headerlink" title="* UI shenanigans with SCSS, BEM and Flex"></a>* UI shenanigans with SCSS, BEM and Flex</h3><p>With mobile devices dominating our lives, of course, the idea to have the game playable on mobile devices is part of the equation from the very beginning. In this article, we will be exploring why SCSS and BEM is a dream team and a few things I’ve learned about Flex.</p>
+<h3 id="Testing-testing-and-more-testing"><a href="#Testing-testing-and-more-testing" class="headerlink" title="* Testing, testing, and more testing"></a>* Testing, testing, and more testing</h3><p>Just because it’s a fun project, it doesn’t mean we shouldn’t test it right? The truth told though is that unit tests and E2E tests in the context of a game can be used for something completely different than you’d expect. Here I’ll be showcasing a few great hidden features of the Aurelia Store plugin, such as the <code>executeSteps</code> helper and how to build a self-playing E2E test to do test playing in an automated way.</p>
+<h3 id="Building-a-great-mobile-experience-with-PWAs"><a href="#Building-a-great-mobile-experience-with-PWAs" class="headerlink" title="Building a great mobile experience with PWAs"></a>Building a great mobile experience with PWAs</h3><p>A game, with only client-side business logic, is a great opportunity to create a progressive web app since everything can be cached on the device and thus allowing a full offline experience. I’ll be showing a few things I’ve learned in that process, beginning from how to run your PWA in dev mode on your mobile device without HTTPS and up to implementing cache invalidations on new releases.</p>
+<h3 id="OAuth-with-Github-Pages"><a href="#OAuth-with-Github-Pages" class="headerlink" title="OAuth with Github Pages"></a>OAuth with Github Pages</h3><p>One of the key restrictions I had in mind when building the game was that it should be functional without any sort of backend. Github pages, aka gh-pages, are thus a great way to reliably host the game. But there are interactions, such as logging in with Github to automatically collect your nickname, that does require a bit more than a simple frontend can handle. In this article, I’m going to show how <a href="https://auth0.com/" target="_blank" rel="noopener">Auth0</a> can be used to do exactly that.</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>If you managed it down here, then let me say thank you for taking the time to read this. While I certainly haven’t yet demonstrated any technical part, I hope my teasers will make you come back once the follow-up articles are available. If you like the game, please let me know by leaving a comment below.</p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/enforted-the-beginning/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/enforted-the-beginning/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/enforted-the-beginning/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/stagedcomponent-plugin-tests/">
+        StagedComponent Plugin Tests →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

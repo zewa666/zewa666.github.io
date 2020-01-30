@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Setup Protractor E2E Tests with Aurelia CLI Apps | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2017/07/protractor_e2e_testing.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2017-07-26T04:28:43.045Z" itemprop="datePublished">
+          2017-07-26
+      </time>
+    
+</span>
+    
+    <h1 class="post-title">
+      Setup Protractor E2E Tests with Aurelia CLI Apps
+    </h1>
+    <section class="post-content">
+      <p>Recently I’ve taken a fresh look at the <a href="https://github.com/aurelia/protractor-plugin" target="_blank" rel="noopener">aurelia-protractor-plugin</a>, which is based on the original plugin I wrote for the Aurelia Skeleton and described in one of the first official <a href="http://blog.aurelia.io/2015/02/16/end-to-end-testing-with-aurelia-and-protractor/" target="_blank" rel="noopener">Aurelia Blog posts</a>. A lot of things are still valid, but many things have changed since then. Lately, great contributions from Core Team member <a href="https://github.com/niieani" target="_blank" rel="noopener">Bazyli Brzóska</a> have first moved out the plugin into a custom repo and further more made it a good fit for WebPack based Aurelia apps. Besides that with the broader acceptance of async/await due to native support in Node made writing Protractor based tests even easier. What hasn’t been addressed yet though is how to setup Protractor E2E tests with a freshly scaffolded Aurelia CLI app.</p>
+<h2 id="How-to-Get-Started"><a href="#How-to-Get-Started" class="headerlink" title="How to Get Started"></a>How to Get Started</h2><p>For the purpose of this article lets start with a new Aurelia CLI app, which will be TypeScript based.<br>As usual, you’ll run <code>au new [yourprojectname]</code> and select TypeScript as your language of choice.<br>I’ve picked TypeScript on purpose for this example since it requires much more dependencies and setup ceremony. Making it work with VanillaJS should be all in all much easier.</p>
+<h2 id="Installing-Protractor-Dependencies"><a href="#Installing-Protractor-Dependencies" class="headerlink" title="Installing Protractor Dependencies"></a>Installing Protractor Dependencies</h2><p>Unlike the skeletons, a CLI generated app is pretty much barebones and requires you to install additional features by yourself. This is good because you’re maybe not into testing at all because all your code always works right?</p>
+<p>If you’re like me though and don’t trust yourself, setting up Protractor is an <code>npm install --save-dev protractor</code> away.</p>
+<blockquote>
+<p>Starting from Node &gt;= 8 and NPM &gt;= 5 you can skip <code>--save</code> as this will be the default but still need to add <code>--save-dev</code> in order to install it as a devDependency, which Protractor in our case is.</p>
+</blockquote>
+<p>Additionally install the aurelia-protractor-plugin with <code>npm install --save-dev aurelia-protractor-plugin</code>.</p>
+<p>Once that is done, create a folder <code>e2e</code> located under the <code>test</code> folder. This will contain all our test specifications. Since we’re on a TypeScript based starter, we’d also like to write our test cases using TS. In order to have Protractor understand these on the fly, we can leverage the package <code>ts-node</code> by installing it via <code>npm install --save-dev ts-node</code>.</p>
+<h2 id="Setup-Protractor-Configurations"><a href="#Setup-Protractor-Configurations" class="headerlink" title="Setup Protractor Configurations"></a>Setup Protractor Configurations</h2><p>Next create a file <code>protractor.conf.js</code> in the root of your app with the following configuration:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">exports.config = &#123;</span><br><span class="line">  directConnect: <span class="literal">true</span>,</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Capabilities to be passed to the webdriver instance.</span></span><br><span class="line">  capabilities: &#123;</span><br><span class="line">    <span class="string">'browserName'</span>: <span class="string">'chrome'</span></span><br><span class="line">  &#125;,</span><br><span class="line">  </span><br><span class="line">  specs: [<span class="string">'test/e2e/**/*.ts'</span>],</span><br><span class="line"></span><br><span class="line">  plugins: [&#123;</span><br><span class="line">    package: <span class="string">'aurelia-protractor-plugin'</span></span><br><span class="line">  &#125;],</span><br><span class="line"></span><br><span class="line">  onPrepare: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">require</span>(<span class="string">'ts-node'</span>)</span><br><span class="line">      .register(&#123;</span><br><span class="line">        compilerOptions: &#123; <span class="attr">module</span>: <span class="string">'commonjs'</span> &#125;,</span><br><span class="line">        disableWarnings: <span class="literal">true</span>,</span><br><span class="line">        fast: <span class="literal">true</span></span><br><span class="line">      &#125;);</span><br><span class="line">  &#125;,</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Options to be passed to Jasmine-node.</span></span><br><span class="line">  jasmineNodeOpts: &#123;</span><br><span class="line">    showColors: <span class="literal">true</span>,</span><br><span class="line">    defaultTimeoutInterval: <span class="number">30000</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>A few things to note here. First, we’ll setup <code>chrome</code> as the default browser defined in the <code>capabilities</code> section and directly connect to the ChromeDriver without needing a dedicated SeleniumServer.  In order to obtain the driver, we can run <code>node_modules/.bin/webdriver-manager update</code> which is a sub-dependency of Protractor. Next, we told Protractor that test cases can be found in the <code>e2e</code> folder using the <code>specs</code> property. The property  <code>plugins</code> takes an array of objects where we pass in the <code>aurelia-protractor-plugin</code>. And last but not least, since we’re on TypeScript we need to tell Protractor that during preparation (<code>onPrepare</code>) it should transpile the given sources, targeting the <code>commonjs</code> module format.</p>
+<h2 id="Creating-your-first-Test"><a href="#Creating-your-first-Test" class="headerlink" title="Creating your first Test"></a>Creating your first Test</h2><p>With that done let’s create our first test by creating the file <code>test/e2e/demo.spec.ts</code>. The name pattern is free at your disposal and can be defined in the specs section of the Protractor configuration, as seen right before.</p>
+<p>The content of the script should look like this:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123;browser, element, by, ExpectedConditions&#125; <span class="keyword">from</span> <span class="string">'aurelia-protractor-plugin/protractor'</span>;</span><br><span class="line"></span><br><span class="line">describe(<span class="string">'demo'</span>, () =&gt; &#123;</span><br><span class="line">  beforeEach(<span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">    <span class="keyword">await</span> browser.loadAndWaitForAureliaPage(<span class="string">"http://localhost:9000"</span>);</span><br><span class="line">    <span class="comment">/* await browser.wait(</span></span><br><span class="line"><span class="comment">      ExpectedConditions.presenceOf(element(by.css("h1"))), 2000</span></span><br><span class="line"><span class="comment">    ); */</span></span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  it(<span class="string">'should load the page and greet the user'</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">    <span class="keyword">await</span> expect(element(by.tagName(<span class="string">"H1"</span>)).getText()).toBe(<span class="string">"Hello World!"</span>);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>First, we’re importing all the necessary parts from the aurelia-protractor-plugin provided type definition. Next, we define a scenario demo using the <code>describe</code> function. Now before each test runs, we want to make sure the page is loaded, Aurelia rendered and the page is ready-for-interaction. Since this would be quite repetitive, we can put that in our <code>beforeEach</code> section.<br>Note the use of the <code>async</code> keyword to indicate that the following anonymous function is going to <code>await</code> the plugin <code>loadAndWaitForAureliaPage</code> method.</p>
+<blockquote>
+<p>If, for whatever reason, you do not want to use the aurelia-protractor-plugin an alternative method to start the test once the page is loaded, would be to wait for the presence of the default <code>h1</code> element scaffolded in our fresh app, with a fallback timeout of 2 seconds. You do that using the <a href="https://github.com/angular/protractor/blob/master/lib/expectedConditions.ts" target="_blank" rel="noopener">ExpectedConditions API</a>. The relevant code can be found under comments in the <code>beforeEach</code> section of the previous example.</p>
+</blockquote>
+<p>Now the test itself merely checks that the <code>H1</code>‘s text equals <code>Hello world!</code>. The cool thing about protractor is that we do not need to use a jasmine done callback to indicate that the test has finished but can continue using async/await which clearly simplifies the code written.</p>
+<h2 id="Updating-Jasmine-Type-Definitions"><a href="#Updating-Jasmine-Type-Definitions" class="headerlink" title="Updating Jasmine Type Definitions"></a>Updating Jasmine Type Definitions</h2><p>Now the last thing that stands out are those pesky squiggle lines as seen in the next screenshot inside the IDE of your choice.</p>
+<p><img src="/content/images/2017/04/missing_jasmine_types.png" alt="Process of how components interact with the store"><br><small>Visual Studio Code missing type definition error indicator</small></p>
+<p>The TypeScript compiler argues that you can’t provide a string to the function <code>toBe</code> since it would expect an <code>Expected&lt;Promise&lt;string&gt;&gt;</code> type. The reason is that with a recent update of Jasmine the type-safety for expectations was enhanced and does not support the patched methods introduced by Protractor. In order to get rid of those simply run <code>npm install npm install --save-dev @types/jasminewd2</code> and after revisiting your file the error should be gone.</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>I hope you’ve seen that it doesn’t take a lot to get your E2E tests up and running with an Aurelia CLI app. Aurelias Protractor Plugin provides the old-known framework-specific helpers and taming the asynchronous nature with async/await is a real dream compared to Promises.</p>
+<p>As usual, if there are any questions and or tips just leave a comment below.</p>
+<p>photo credit: <a href="https://pixabay.com/de/tafel-schule-uni-lernen-arbeit-2450236/" target="_blank" rel="noopener">geralt: Test blackboard</a> via <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.de" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/setup-protractor-e2e-tests-with-aurelia-cli-apps/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/setup-protractor-e2e-tests-with-aurelia-cli-apps/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/setup-protractor-e2e-tests-with-aurelia-cli-apps/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/aurelia-cli-and-rxjs-size-sensitive-bundles/">
+        ← Aurelia CLI and RxJS - Size sensitive bundles
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/using-a-state-container-with-aurelia/">
+        Using a state container with Aurelia →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

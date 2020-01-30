@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Yeoman Generator: perform automatic npm install | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2015/03/4656518827_3358f43bf2_b.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2015-03-30T09:42:39.616Z" itemprop="datePublished">
+          2015-03-30
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>,
+    
+    <a href="/tags/yeoman/">yeoman</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Yeoman Generator: perform automatic npm install
+    </h1>
+    <section class="post-content">
+      <h1 id="Yeoman-TL-DR"><a href="#Yeoman-TL-DR" class="headerlink" title="Yeoman TL;DR;"></a>Yeoman TL;DR;</h1><p><a href="http://yeoman.io/" target="_blank" rel="noopener">Yeoman</a> is an awesome tool. In short words, it is a scaffolding tool to get you set up quickly with a new project by asking you only a few questions.<br>Not only it’s widespread and has a large community, but also provides a nice API for devs to create new generators (those are the installable packages).</p>
+<p>If you haven’t checked it out so far head over to their <a href="http://yeoman.io/learning/index.html" target="_blank" rel="noopener">Getting Started page</a> or even better the great <a href="http://yeoman.io/codelab.html" target="_blank" rel="noopener">step-by-step codelab</a>.</p>
+<h1 id="Automating-npm-install"><a href="#Automating-npm-install" class="headerlink" title="Automating npm install"></a>Automating npm install</h1><p>So much for the intro now lets get to reason for this post. I’ve created a simple Generator for the <a href="http://aurelia.io" target="_blank" rel="noopener">Aurelia framework</a> which essentially gets you the <a href="https://github.com/zewa666/generator-aurelia" target="_blank" rel="noopener">latest sources</a> from GitHub and installs those. Additionally you get some simple scaffolding features for VM’s and Views.</p>
+<p>After that process the user is supposed to follow the usual Aurelia process and perform the <code>npm install</code> and <code>jspm install</code> commands. So a recent user request was about automating those. After some research it turns out that Yeomans API provides a really helpful method called <code>npmInstall</code>.</p>
+<p>For those of you who haven’t worked with Yeoman, it’s pretty simple. You create your generator by extending the yeoman-generator Base class (1). Afterwards each function included will be executed sequentially so you get a chance to nicely structure your code (2). So in order to install a specific module we just need to create a method with following code shown in section (3). Alternatively you can call the method <code>npmInstall</code> without any parameters to simulate the desired installation of all dependencies mentioned in the package.json file (4).</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// (1): Create a generator by extending the Base class</span></span><br><span class="line">generators.Base.extend(&#123;</span><br><span class="line">  <span class="comment">// (2): Create a function with any name to add a step</span></span><br><span class="line">  installJquery: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// (3): Install jQuery via npm</span></span><br><span class="line">    <span class="keyword">this</span>.npmInstall([<span class="string">'jquery'</span>], &#123; <span class="string">'saveDev'</span>: <span class="literal">true</span> &#125;);</span><br><span class="line">  &#125;,</span><br><span class="line">  </span><br><span class="line">  installAllFromPackageJSON: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// (4): Install all dependencies from package.json</span></span><br><span class="line">    <span class="keyword">this</span>.npmInstall();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;):</span><br></pre></td></tr></table></figure>
+<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p>As depicted in the example above, working with Yeoman’s API is straightforward and should get you started quickly with your next CLI / Scaffolding Project.</p>
+<p>The next step to finish the request is to find out how to automate JSPM install. Let’s see whether that works equally easy :) </p>
+<p><small><br>photo credit: <a href="http://www.flickr.com/photos/61417318@N00/4656518827" target="_blank" rel="noopener">Automatic Transmission</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a> <a href="https://creativecommons.org/licenses/by/2.0/" target="_blank" rel="noopener">(license)</a><br></small></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/yeoman-generator-perform-automatic-npm-install/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/yeoman-generator-perform-automatic-npm-install/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/yeoman-generator-perform-automatic-npm-install/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/new-book-on-angularjs/">
+        ← New book on AngularJS
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/unit-testing-bug-in-the-skeleton-navigation-app/">
+        Unit testing bug in the Skeleton Navigation app →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

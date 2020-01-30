@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Type-safe Jasmine Spies | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2017/12/spy-camera.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2017-12-15T16:25:24.679Z" itemprop="datePublished">
+          2017-12-15
+      </time>
+    
+</span>
+    
+    <h1 class="post-title">
+      Type-safe Jasmine Spies
+    </h1>
+    <section class="post-content">
+      <p>TypeScript for all its glory is pretty handy when it comes to better Intellisense and type safety. Yet one of those situations that constantly drove me crazy was writing Jasmine tests. Specifically talking about Jasmine Spies.</p>
+<h2 id="The-test-candidate"><a href="#The-test-candidate" class="headerlink" title="The test candidate"></a>The test candidate</h2><p>So imagine we have this little app with a small <code>Service</code> fetching a server-side API and a <code>MyComponent</code>, consuming the services via constructor injection.</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> Service &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">async</span> getServerData() &#123;</span><br><span class="line">    <span class="keyword">const</span> response = <span class="keyword">await</span> fetch(<span class="string">"http://my-endpoint.com/api/foo"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">await</span> response.json();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> MyComponent &#123;</span><br><span class="line">  <span class="keyword">constructor</span>(<span class="params"><span class="keyword">private</span> service: Service</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">async</span> doStuff() &#123;</span><br><span class="line">    <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="keyword">this</span>.service.getServerData();</span><br><span class="line">    <span class="keyword">if</span> (response.msg === <span class="string">"success"</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Calling the method <code>doStuff</code> should fetch the data, check whether the property <code>msg</code> is <code>success</code> and return <code>true</code> in that case.</p>
+<h2 id="Creating-the-test"><a href="#Creating-the-test" class="headerlink" title="Creating the test"></a>Creating the test</h2><p>A simple <code>describe</code> and <code>it</code> should be enough to depict what we’re trying to achieve</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">describe(<span class="string">"My very special scenario"</span>, <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">"should support spies the nice type safe way"</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> mockedService: Service = jasmine</span><br><span class="line">      .createSpyObj(<span class="string">"Service"</span>, [<span class="string">"getServerData"</span>]);</span><br><span class="line"></span><br><span class="line">    mockedService.getServerData</span><br><span class="line">      .and</span><br><span class="line">      .returnValue(<span class="built_in">Promise</span>.resolve(&#123; msg: <span class="string">"success"</span> &#125;));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> sut = <span class="keyword">new</span> MyComponent(mockedService);</span><br><span class="line"></span><br><span class="line">    expect(<span class="keyword">await</span> sut.doStuff()).toBe(<span class="literal">true</span>);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>Running your test will now successfully pass the test but there is this one ugly squiggle line at the <code>.and.</code> which results in an ugly typescript error:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[ts] Property &apos;and&apos; does not exist on type &apos;() =&gt; Promise&lt;any&gt;&apos;.</span><br></pre></td></tr></table></figure>
+<p>Thats understandable since our mocked service actually doesn’t provide a the <code>getServerData</code> method as spy. And most of the Stackoverflow questions and blog posts so far recommend an ugly cast like this:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(mockedService.getServerData <span class="keyword">as</span> jasmine.Spy)</span><br><span class="line">      .and.returnValue(<span class="built_in">Promise</span>.resolve(&#123; msg: <span class="string">"success"</span> &#125;));</span><br></pre></td></tr></table></figure>
+<p>Meeeh if you ask me</p>
+<h2 id="The-fix"><a href="#The-fix" class="headerlink" title="The fix"></a>The fix</h2><p>Now what if I told you the solution would be just to initially cast the <code>mockedService</code> as a <code>Spied&lt;Service&gt;</code> vs <code>Service</code>:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">"should support spies the nice type safe way"</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> mockedService: Spied&lt;Service&gt; = jasmine</span><br><span class="line">      .createSpyObj(<span class="string">"Service"</span>, [<span class="string">"getServerData"</span>]);</span><br><span class="line"></span><br><span class="line">    mockedService.getServerData</span><br><span class="line">      .and</span><br><span class="line">      .returnValue(<span class="built_in">Promise</span>.resolve(&#123; msg: <span class="string">"success"</span> &#125;));</span><br><span class="line">    ...</span><br><span class="line">  &#125;);</span><br></pre></td></tr></table></figure>
+<p>Reads much nicer doesn’t it? Here’s the code that makes that possible:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">type</span> Spied&lt;T&gt; = &#123;</span><br><span class="line">  [Method <span class="keyword">in</span> keyof T]: jasmine.Spy;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>The generic type <code>Spied</code>, a <a href="https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-1.html#mapped-types" target="_blank" rel="noopener">mapped type</a>, takes any other type, and extends all of its methods using the <code>x in keyof T</code> syntax and mapping it to a <code>jasmine.Spy</code>. This means now every method not only acts as a function but also as an extended Spy object.</p>
+<p>And the red squiggles are gone !!!</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>With this simple trick now you can save tons of strict casts throughout your test code and again enjoy the type-safe life, the easy way. Man all of this wouldn’t even be needed in VanillaJS. Just sayin … :)</p>
+<p>photo credit: <a href="https://pixabay.com/de/spion-kamera-spion-geheimnis-1702973/" target="_blank" rel="noopener">peterbwiberg: Spy camera</a> via <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.de" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/typesafe-jasmine-spies/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/typesafe-jasmine-spies/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/typesafe-jasmine-spies/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/stagedcomponent-plugin-tests/">
+        ← StagedComponent Plugin Tests
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/aurelia-cli-and-rxjs-async-binding/">
+        Aurelia CLI and RxJS - Async binding →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>StagedComponent Plugin Tests | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2018/01/stage-1357961_1280.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2018-01-20T15:34:34.273Z" itemprop="datePublished">
+          2018-01-20
+      </time>
+    
+</span>
+    
+    <h1 class="post-title">
+      StagedComponent Plugin Tests
+    </h1>
+    <section class="post-content">
+      <p>Have you built an Aurelia plugin yet? If not it’s a great way to share functionality within a generic way with other developers, plus it’s fun as you learn tons of cool internals and best practices on writing safe Aurelia code.</p>
+<p>The actual API is quite straightforward for building your plugin, but when it comes to testing things are a bit unclear. If you keep the focus on isolated unit tests, that means you don’t need your environment staged under test, all is great. Otherwise, this article is going to explain how you can stage your plugin itself, in order to test your functionality via Aurelia-Testing helpers.</p>
+<h2 id="Why-Staged-Tests-at-all"><a href="#Why-Staged-Tests-at-all" class="headerlink" title="Why Staged Tests at all?"></a>Why Staged Tests at all?</h2><p>For quite a while it is sufficient to go with isolated unit tests. You’re able to test all your APIs and get a good basic coverage set up. That should make up your basis and often solves 50%-70%. But let’s say your plugin provides a custom attribute with additional features. Testing the backing code is done with isolated tests, but having the interaction of the custom attribute with the DOM and Aurelia’s binding engine covered will require switching to integration tests.</p>
+<p>And that is exactly what the Aurelia-Testing helpers like the <a href="http://aurelia.io/docs/testing/components" target="_blank" rel="noopener">StagedComponent</a> help you to do.</p>
+<h2 id="Case-study-Aurelia-I18N-Plugin"><a href="#Case-study-Aurelia-I18N-Plugin" class="headerlink" title="Case study: Aurelia I18N Plugin"></a>Case study: Aurelia I18N Plugin</h2><p>Instead of continuing to talk about a hypothetical plugin, lets instead see how all of this is done with the official <a href="https://github.com/aurelia/i18n" target="_blank" rel="noopener">Aurelia I18N Plugin</a>. This plugin uses Karma as the test-runner and Jasmine as its assertion-library.</p>
+<p>One of its features is the custom attribute called <code>T</code> – for a detailed description <a href="http://aurelia.io/docs/plugins/i18n#using-the-plugin" target="_blank" rel="noopener">look here</a> for the subsection <em>Translating via html attributes</em> – which simplifies declarative i18n assignments on a target element.</p>
+<p>There is a spec file <a href="https://github.com/aurelia/i18n/blob/master/test/unit/t-attribute.spec.js" target="_blank" rel="noopener">t-attribute.spec.js</a> which depicts our scenario.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; StageComponent &#125; <span class="keyword">from</span> <span class="string">'aurelia-testing'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; bootstrap &#125; <span class="keyword">from</span> <span class="string">'aurelia-bootstrapper'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123; bootstrapTestEnvironment &#125; <span class="keyword">from</span> <span class="string">'./staging-helpers'</span>;</span><br><span class="line"></span><br><span class="line">describe(<span class="string">'t-attribute'</span>, () =&gt; &#123;</span><br><span class="line">  it(<span class="string">'should convert bound integers to strings'</span>, done =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> target = <span class="string">'test-target'</span>;</span><br><span class="line">    <span class="keyword">const</span> expectedValue = <span class="string">'Foobar'</span>;</span><br><span class="line">    <span class="keyword">const</span> component = StageComponent</span><br><span class="line">      .withResources(<span class="string">'test/unit/mocks/rt-vm'</span>)</span><br><span class="line">      .inView(<span class="string">`&lt;div t.bind="integer" id=<span class="subst">$&#123;target&#125;</span>&gt;&lt;/div&gt;`</span>)</span><br><span class="line">      .boundTo(&#123; <span class="attr">integer</span>: <span class="number">1</span> &#125;);</span><br><span class="line"></span><br><span class="line">    bootstrapTestEnvironment(component, &#123; <span class="attr">en</span>:</span><br><span class="line">      &#123; <span class="attr">translation</span>: &#123;</span><br><span class="line">        <span class="string">'1'</span>: expectedValue</span><br><span class="line">      &#125;&#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    component.create(bootstrap)</span><br><span class="line">      .then(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> elem = <span class="built_in">document</span>.getElementById(target);</span><br><span class="line">        expect(elem.innerHTML).toBe(expectedValue);</span><br><span class="line"></span><br><span class="line">        done();</span><br><span class="line">      &#125;);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<h3 id="Creating-a-StagedComponent"><a href="#Creating-a-StagedComponent" class="headerlink" title="Creating a StagedComponent"></a>Creating a StagedComponent</h3><p>The target, as well as the expectedValue, are specific to the given test, as such let’s skip right away to the component instantiation, where a <a href="https://github.com/aurelia/i18n/blob/master/test/unit/mocks/rt-vm.js" target="_blank" rel="noopener">mocked ViewModel</a> is referenced which is nothing more than this:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// test/unit/mocks/rt-vm.js</span></span><br><span class="line"><span class="keyword">export</span> <span class="class"><span class="keyword">class</span> <span class="title">RtVm</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>A companion <a href="https://github.com/aurelia/i18n/blob/master/test/unit/mocks/rt-vm.html" target="_blank" rel="noopener">rt-vm.html</a> is thus automatically loaded by the StagedComponent, which is located right next to the ViewModel and also just contains the bare minimum:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span><span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>The chained <code>inView</code> method is now where we actually setup up our test, in the specific case we’re testing that an integer may be bound to the attribute. The additional <code>id</code> is just a helper to later on easily retrieve the rendered DOM element.<br>Last but not least <code>boundTo</code> provides the effective data for our ViewModel.</p>
+<blockquote>
+<p>Although our ViewModel had no definition of a property <code>integer</code>, <code>boundTo</code> will happily create one and assign the provided value.</p>
+</blockquote>
+<h3 id="Using-the-Plugin-in-the-Test-Environment"><a href="#Using-the-Plugin-in-the-Test-Environment" class="headerlink" title="Using the Plugin in the Test-Environment"></a>Using the Plugin in the Test-Environment</h3><p>Now in order to connect the plugin’s sources lets take a look at the helper function <a href="https://github.com/aurelia/i18n/blob/master/test/unit/staging-helpers.js" target="_blank" rel="noopener">bootstrapTestEnvironment</a>.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">bootstrapTestEnvironment</span>(<span class="params">component, resources</span>) </span>&#123;</span><br><span class="line">  component.bootstrap(<span class="function">(<span class="params">aurelia</span>) =&gt;</span> &#123;</span><br><span class="line">    aurelia.use</span><br><span class="line">      .standardConfiguration()</span><br><span class="line">      .feature(<span class="string">'src'</span>, () =&gt; &#123;</span><br><span class="line">        <span class="comment">// Your plugins setup method</span></span><br><span class="line">      &#125;);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The important part is that we treat the plugin as a <a href="http://aurelia.io/docs/fundamentals/app-configuration-and-startup#organizing-your-app-with-features" target="_blank" rel="noopener">feature</a> and call to the <code>src</code> folder of our plugin. This works perfectly with one drawback. Starting your Karma tests, you will see that a request is made for <code>src/index.js</code>. In case of the I18N plugin, this is a problem since the initial file is called <code>aurelia-i18n.js</code> following a convention from other Aurelia repositories.</p>
+<p>In order to work around this issue, we finally need to touch the <a href="https://github.com/aurelia/i18n/blob/master/karma.conf.js" target="_blank" rel="noopener">Karma configuration</a> file.<br>With the help of the <code>proxies</code> property, we can define that a request for the index file should be re-routed to the actual file.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">proxies: &#123;</span><br><span class="line"> ...</span><br><span class="line"> // redirect aurelia.feature&apos;s request of the index file to the actual setup</span><br><span class="line"> &apos;/base/src/index.js&apos;: &apos;/base/src/aurelia-i18n.js&apos;</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+<p>and additionally we’re also providing the mocked VM as part of our test infrastructure:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">jspm: &#123;</span><br><span class="line">  serveFiles: [..., &apos;test/unit/mocks/**/*-vm.*&apos;]</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>With all that setup we are now able to test our plugin itself staged for our test environment, by leveraging the trick of treating the plugin as a feature.<br>Now there are no more excuses for not writing proper unit tests to cover all the weird use cases … damn ;)</p>
+<p>photo credit: <a href="https://pixabay.com/en/stage-performance-concert-stage-1357961/" target="_blank" rel="noopener">Desertrose7: Stage Performance</a> via <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.de" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/stagedcomponent-plugin-tests/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/stagedcomponent-plugin-tests/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/stagedcomponent-plugin-tests/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/enforted-the-beginning/">
+        ← Enforted - A board game built with Aurelia
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/typesafe-jasmine-spies/">
+        Type-safe Jasmine Spies →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

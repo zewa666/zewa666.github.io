@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Building a JS View Library | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2017/01/library.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2017-01-30T16:12:48.907Z" itemprop="datePublished">
+          2017-01-30
+      </time>
+    
+    
+    | 
+    <a href="/tags/javascript/">javascript</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Building a JS View Library
+    </h1>
+    <section class="post-content">
+      <p>It always bugged me to understand how shiny new JavaScript frameworks and libraries work. Essentially this was the reason why I’ve started contributing to Aurelia. But it didn’t stop there. Before that, I used to work a lot with AngularJS. Later with the advent of Angular (&gt; 2.x) I started with doing consulting and training gigs. In order to do that I dug into Angulars internals and learned things I like and others I dislike. Before all of that, it was Durandal, Backbone and even a bit Ember.</p>
+<p>But as one can see all of them came from the full-featured framework perspective. So it always fascinated me why React was or still is hyped that much. Because at the end of the day, it is nothing more than a simple view layer right?</p>
+<h2 id="Gonna-make-my-own-library"><a href="#Gonna-make-my-own-library" class="headerlink" title="Gonna make my own library"></a>Gonna make my own library</h2><p>That was a good motivation to start my own project and learn some things. You can find the project over at <a href="https://github.com/zewa666/vlib" target="_blank" rel="noopener">GitHub called VLib</a>. It started out as a simple DOM view engine, with a code-only focus and no HTML templating. Because that is the essence of React isn’t it?<br>The basics were quickly in place and soon following was possible:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> content = <span class="function">(<span class="params">props</span>) =&gt;</span> div(&#123;<span class="string">"id"</span>: props.mountId&#125;,</span><br><span class="line">  h2(&#123;<span class="string">"class"</span>: [<span class="string">"red"</span>, <span class="string">"blue"</span>]&#125;, props.greetingHeader),</span><br><span class="line">  p(&#123;<span class="string">"style"</span>: props.styles&#125;, <span class="string">"Lorem ipsum"</span>));</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> model = &#123;</span><br><span class="line">  mountId: <span class="string">'app-root'</span>,</span><br><span class="line">  greetingHeader: <span class="string">'Hello World'</span>,</span><br><span class="line">  styles: <span class="string">'color: red'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">VLibRender(content, model, <span class="string">"body"</span>, model.mountId);</span><br></pre></td></tr></table></figure>
+<p>BAM … page created done. <a href="https://github.com/zewa666/vlib/blob/aecd3c2bb2a9d0a5bf995c67fbafbf83ae37bfe6/src/vlib.js" target="_blank" rel="noopener">At this stage</a> my library was 2.27kb. Beat that Inferno.</p>
+<h2 id="Markup-the-simple-way"><a href="#Markup-the-simple-way" class="headerlink" title="Markup the simple way"></a>Markup the simple way</h2><p>I started to understand why people seem to like JSX, as it truly is easier to express markup that way. So my next step was to bring in JSX and by refactoring my sample, learn what is necessary to support proper prop bindings. Heh :)<br>I found <a href="https://babeljs.io/docs/plugins/transform-react-jsx/" target="_blank" rel="noopener">babel-transform-jsx</a> and have been astonished how easy it is to integrate into my current build setup.</p>
+<h2 id="Re-render-changes-Modules-Webpack"><a href="#Re-render-changes-Modules-Webpack" class="headerlink" title="Re-render changes? Modules? Webpack!"></a>Re-render changes? Modules? Webpack!</h2><p>Everything was great until I tried refreshing my props and getting result changes re-rendered. Crap. But thank god there is <a href="https://diffhtml.org/" target="_blank" rel="noopener">diffhtml</a>.<br>Adding that needed a proper build structure to support module imports. So I decided to finally give Webpack a try. After several tryouts, I finally managed to come up with a working custom assembled config.</p>
+<h2 id="State-management"><a href="#State-management" class="headerlink" title="State-management"></a>State-management</h2><p>Ok now that we’re in a semi-react style situation, how about properly handling the apps state? Well here comes Redux. By embracing its model and letting it leak into my library design, I managed to cut down a lot of boilerplate and at the same time streamline the development process.</p>
+<h2 id="Server-side-rendering"><a href="#Server-side-rendering" class="headerlink" title="Server-side rendering"></a>Server-side rendering</h2><p>But heck, as soon as you think you’re done there is this new shiny thing, server-side rendering of the initial state. A little bit of Express magic, jsDom for server side rendering and tons of webpack adjustments, topped with some nice npm scripts and we’re done. Last but not least I got the testing story straight with Karma, Jasmine and Webpack.</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>What was really interesting with this project was the continuous learning process. Starting from scratch, I slowly understood how one thing requires the other and how things come together. It also made be understand some of the current best practices and libraries. Last but not least it motivated me to take a closer look at React and React Native. This time though I am prepared by understanding the basics and the underlying concepts from scratch.</p>
+<p>photo credit: <a href="https://pixabay.com/de/b%C3%BCcher-t%C3%BCr-eingang-italien-farben-1655783/" target="_blank" rel="noopener">Nino Carè: Books Door Entrance Italy Colors</a> via <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> <a href="https://creativecommons.org/licenses/by-nc-nd/2.0/" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/building-js-view-library/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/building-js-view-library/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/building-js-view-library/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/basta-2017-frankfurt-talk/">
+        ← BASTA 2017 Frankfurt Talk
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/blog-posts-on-sitepoint/">
+        Blog posts on SitePoint →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Aurelia CLI and RxJS - Size sensitive bundles | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2017/08/weight-loss-2036966_1920.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2017-08-19T10:33:08.337Z" itemprop="datePublished">
+          2017-08-19
+      </time>
+    
+</span>
+    
+    <h1 class="post-title">
+      Aurelia CLI and RxJS - Size sensitive bundles
+    </h1>
+    <section class="post-content">
+      <p>I’m starting a new blog series about best practices with an Aurelia CLI TypeScript app and <a href="http://reactivex.io/" target="_blank" rel="noopener">RxJS</a>. For everybody new to RxJS I can highly recommend this <a href="https://egghead.io/courses/introduction-to-reactive-programming" target="_blank" rel="noopener">Egghead Video by André Staltz</a> which will give you a headstart with this incredible framework.</p>
+<p>This first article will show you how to integrate a minimal version of RxJS with a new Aurelia CLI TypeScript app. The primary concern is bundle size, so before we dive into the topic lets examine what a new scaffold looks like in the begin.</p>
+<blockquote>
+<p>You can find the resulting app over at this <a href="https://github.com/zewa666/aurelia-cli-rxjs" target="_blank" rel="noopener">github repository</a> which will be used for further examples and articles. <a href="https://github.com/zewa666/aurelia-cli-rxjs/releases/tag/1.0.0" target="_blank" rel="noopener">This tag</a> marks the snapshot of features of this article.</p>
+</blockquote>
+<h2 id="Creating-the-Demo-app"><a href="#Creating-the-Demo-app" class="headerlink" title="Creating the Demo app"></a>Creating the Demo app</h2><p>We’ll scaffold a new Aurelia application with TypeScript using the cli command <code>au new [name-of-your-app]</code>.<br>We’re greeted with a nice walkthrough wizard where we pick RequireJS <strong>(1)</strong> and TypeScript <strong>(2)</strong>. We’ll use maximum minification <strong>(3)</strong> since we’re after a small bundle size right?<br>This demo ain’t about CSS nor testing so pick no for both of them <strong>(1, 2)</strong>.</p>
+<blockquote>
+<p>Make sure to use the latest version of the Aurelia CLI, currently v.0.31.0, which makes it possible to <a href="https://github.com/aurelia/cli/pull/673" target="_blank" rel="noopener">trace dependencies without a main entry point</a></p>
+</blockquote>
+<h2 id="Aurelia-Weightwatchers"><a href="#Aurelia-Weightwatchers" class="headerlink" title="Aurelia Weightwatchers"></a>Aurelia Weightwatchers</h2><p>Now lets start the numbers game.<br>Running <code>au build --env prod</code> will yield a production ready app and vendor bundle, which will utilize all the minification hocus pocus for bundled templates. This is what you’re gonna distribute once your app is ready to be released. And currently it weights <strong>395kb</strong>. I know what you’re thinking now. Isn’t there a magic number of around <strong>200kb</strong> you should stay under in order to provide your content fast even for slow connections? Keep in<br>mind that the default example uses the <code>defaultConfiguration</code> as seen in the <code>main.ts</code> configure method:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">configure</span>(<span class="params">aurelia: Aurelia</span>) </span>&#123;</span><br><span class="line">  aurelia.use</span><br><span class="line">    .standardConfiguration()</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+<p>What might look like a small call actually translates to:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">configure</span>(<span class="params">aurelia</span>) </span>&#123;</span><br><span class="line">  aurelia.use</span><br><span class="line">    .defaultBindingLanguage()</span><br><span class="line">    .defaultResources()</span><br><span class="line">    .history()</span><br><span class="line">    .router()</span><br><span class="line">    .eventAggregator();</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+<p>So lets say we’re not into <code>routing</code> for our small demo app, nor do we need an <code>eventAggregator</code> and HTML5 <code>history</code> support.<br>By switching the configure function to read like this:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">configure</span>(<span class="params">aurelia</span>) </span>&#123;</span><br><span class="line">  aurelia.use</span><br><span class="line">    .defaultBindingLanguage()</span><br><span class="line">    .defaultResources()</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+<p>and remove the following lines from <code>aurelia.json</code></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">dependencies: [</span><br><span class="line">  ...  // remove the following lines scattered throughout the bundles dependencies array</span><br><span class="line">  "aurelia-event-aggregator",</span><br><span class="line">  "aurelia-history",</span><br><span class="line">  "aurelia-history-browser",</span><br><span class="line">  "aurelia-route-recognizer",</span><br><span class="line">  "aurelia-router",</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"name"</span>: <span class="string">"aurelia-templating-router"</span>,</span><br><span class="line">    <span class="attr">"path"</span>: <span class="string">"../node_modules/aurelia-templating-router/dist/amd"</span>,</span><br><span class="line">    <span class="attr">"main"</span>: <span class="string">"aurelia-templating-router"</span></span><br><span class="line">  &#125;,</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>and run <code>au build --env prod</code> again we get a vendor bundle with a size of <strong>347kb</strong>. Cool saved <strong>48kb</strong> minified vendor code not necessary for our demo. Keep in mind that not every app really needs a router so this might be something for your next application as well. But if you’re like me it still feels like there is stuff left to do.</p>
+<h2 id="Reducing-even-more-weight"><a href="#Reducing-even-more-weight" class="headerlink" title="Reducing even more weight"></a>Reducing even more weight</h2><p>Our demo neither needs super duper nice support for Edge nor IE11 since everybody uses modern evergreen browsers right?<br>So lets strip out all the bluebird related stuff as well for proper Promises.</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">"node_modules/bluebird/js/browser/bluebird.core.js",</span><br><span class="line">"node_modules/aurelia-cli/lib/resources/scripts/configure-bluebird.js",</span><br></pre></td></tr></table></figure>
+<p>And running the build command again we get <strong>295kb</strong>. Another <strong>52kb</strong> saved. We’re getting somewhere.</p>
+<p>Last but not least lets see how big the size is for our clients requesting the app. In order to reduce that size even more we can use gzip to compress our data size when delivering over the wire. Since we’re not gonna create a dedicated server lets use the CLIs built in BrowserSync and add gzip support.</p>
+<p>To do so first run <code>npm install --save-dev compression</code> to save the gzip package as dev dependency. Next update your <code>aurelia_project/tasks/run.ts</code> file by adding the top import and activating compression as middleware.</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> compress <span class="keyword">from</span> <span class="string">'compression'</span>; <span class="comment">// &lt;-- add this</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> serve = gulp.series(</span><br><span class="line">  build,</span><br><span class="line">  done =&gt; &#123;</span><br><span class="line">    browserSync(&#123;</span><br><span class="line">      online: <span class="literal">false</span>,</span><br><span class="line">      open: <span class="literal">false</span>,</span><br><span class="line">      port: <span class="number">9000</span>,</span><br><span class="line">      logLevel: <span class="string">'silent'</span>,</span><br><span class="line">      server: &#123;</span><br><span class="line">        baseDir: [project.platform.baseDir],</span><br><span class="line">        <span class="comment">// add compress() to the list</span></span><br><span class="line">        middleware: [compress(), historyApiFallback(), <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</span><br><span class="line">          res.setHeader(<span class="string">'Access-Control-Allow-Origin'</span>, <span class="string">'*'</span>);</span><br><span class="line">          next();</span><br><span class="line">        &#125;]</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;, <span class="function"><span class="keyword">function</span> (<span class="params">err, bs</span>) </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (err) <span class="keyword">return</span> done(err);</span><br><span class="line">      <span class="keyword">let</span> urls = bs.options.get(<span class="string">'urls'</span>).toJS();</span><br><span class="line">      log(<span class="string">`Application Available At: <span class="subst">$&#123;urls.local&#125;</span>`</span>);</span><br><span class="line">      log(<span class="string">`BrowserSync Available At: <span class="subst">$&#123;urls.ui&#125;</span>`</span>);</span><br><span class="line">      done();</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>Fire up the dev server in production mode with <code>au run --env prod</code> and start your devtools. Switch over to the network tab et voila …</p>
+<p><img src="/content/images/2017/04/request-size-gzip.png" alt="Devtools showing the vendor.bundle size using gzip"></p>
+<p> <strong>72.1kb</strong>. Now we’re talking. That’s something I feel quite comfortable to distribute as part of my vendor bundle.</p>
+<h2 id="Wasn’t-this-about-RxJS"><a href="#Wasn’t-this-about-RxJS" class="headerlink" title="Wasn’t this about RxJS?"></a>Wasn’t this about RxJS?</h2><p>Right, the purpose of this article was to take a look at how to bundle RxJS with an Aurelia CLI app. Lets do so by installing rxjs via <code>npm install --save rxjs</code> and adding the following dependency config to our <code>aurelia.json</code> file:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">dependencies: [</span><br><span class="line">  ...</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"name"</span>: <span class="string">"rxjs"</span>,</span><br><span class="line">    <span class="attr">"path"</span>: <span class="string">"../node_modules/rxjs"</span>,</span><br><span class="line">    <span class="attr">"main"</span>: <span class="string">"Rx"</span></span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>Running the build command again we get … wait WHAAT <strong>547kb</strong>? Jesus Christ, at this point we might should start thinking whether FRP and all this hype surrounding Observables is really necessary. I mean from 295kb to 547kb, thats pretty much the same as the whole Aurelia bundle including the RequireJS runtime.</p>
+<p>Yep RxJS is a little fatty. He ate too much observables and subjects when he was a child, and continued stuffing additional operators and helpers when he grew up. Now being in v5 it gets even messier. But looking at the bundled Rx.js we see that it contains all sorts of stuff.</p>
+<p><code>require(&#39;./add/operator/dematerialize&#39;);</code> what the heck is that? Oh the counterpart to <code>require(&#39;./add/operator/materialize&#39;);</code>. Are we really gonna need a WebSocketSubject either? So wouldn’t it be nice if we could only bundle what we really need?</p>
+<p>YES WE CAN, AND YES WE SHOULD !!!</p>
+<p>In order to do so we’ll simply have to update the above dependency configuration to say <code>&quot;main&quot;: false</code>. Running the bulid command we see we’re back at 295kb.</p>
+<h2 id="Granular-patched-RxJS-imports"><a href="#Granular-patched-RxJS-imports" class="headerlink" title="Granular (patched) RxJS imports"></a>Granular (patched) RxJS imports</h2><p>The above settings simply tells the Aurelia CLI not to use any default file and thus start importing things. As long as there’s no reference we won’t need to bundle anything.<br>What we need to make sure of when requesting features from RxJS though is that we do not import the full library itself anywhere. That happens through one of the following statements</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> rx <span class="keyword">from</span> <span class="string">'rxjs'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; Observable, ... &#125; <span class="keyword">from</span> <span class="string">'rxjs'</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">'rxjs'</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">'rxjs/Rx'</span>;</span><br></pre></td></tr></table></figure>
+<p>As soon as we do so, we’ll get all the fatty size back in. Luckily above won’t happen since the barrel export is called Rx.js. Having main set to false an import from ‘rxjs’ would be translated to ‘rxjs/index’ and since that doesn’t exist we’ll just get an error.</p>
+<p>For the demo lets update the app.ts file as follows:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; Observable &#125; <span class="keyword">from</span> <span class="string">'rxjs/Rx'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">class</span> App &#123;</span><br><span class="line">  message = <span class="string">'Hello World!'</span>;</span><br><span class="line"></span><br><span class="line">  attached() &#123;</span><br><span class="line">    Observable.of(<span class="number">3</span> * <span class="number">7</span>)</span><br><span class="line">      .map(<span class="function">(<span class="params">value</span>) =&gt;</span> value * <span class="number">2</span>)</span><br><span class="line">      .subscribe(</span><br><span class="line">        (result) =&gt; <span class="keyword">this</span>.message = result.toString()</span><br><span class="line">      );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>As we can see the observable inside attached requests the Observable type and the of and map operators. So in order to make sure to only bundle what we really need just add the following imports instead.</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; Observable &#125; <span class="keyword">from</span> <span class="string">'rxjs/Observable'</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">"rxjs/add/operator/map"</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">"rxjs/add/observable/of"</span>;</span><br></pre></td></tr></table></figure>
+<p>This might sound confusing but if you can’t remember how the import paths work just try to speak out those import statements loud.<br>First one says <code>import X from rxjs/X</code>, where X is the thing we want, namely the Observable. Next we say <code>add the operator map</code> and last but not least <code>add the observable method observable.of</code>. Remembering that makes it easier to write your import statements, alternatively navigate to <code>node_modules/rxjs</code> and look around for what you’re searching for.</p>
+<p>Back to why we’re doing all of this … running the build command we end up with … drum rolls … bells whistle … aaaaaaaand <strong>309kb</strong>. Running that with gzip results in <strong>75.3kb</strong> which is the way it should be.</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>I hope you saw that Aurelia and especially RxJS at the begin look like fat giant libraries. But by sorting out what you don’t need and applying gzip you can get the bundle down to a really decent size. Hope you enjoyed the post and if there are any questions don’t hesitate to leave your comments below.</p>
+<p>photo credit: <a href="https://pixabay.com/de/gewicht-verlust-gewicht-ern%C3%A4hrung-2036966/" target="_blank" rel="noopener">TeroVesalainen: Weight Loss</a> via <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.de" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/aurelia-cli-and-rxjs-size-sensitive-bundles/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/aurelia-cli-and-rxjs-size-sensitive-bundles/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/aurelia-cli-and-rxjs-size-sensitive-bundles/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/aurelia-cli-and-rxjs-async-binding/">
+        ← Aurelia CLI and RxJS - Async binding
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/setup-protractor-e2e-tests-with-aurelia-cli-apps/">
+        Setup Protractor E2E Tests with Aurelia CLI Apps →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

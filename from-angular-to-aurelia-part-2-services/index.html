@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>From Angular to Aurelia Part 2: Services | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2015/04/3937050845_37c5233ac9_o-1.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2015-04-10T10:36:47.619Z" itemprop="datePublished">
+          2015-04-10
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>,
+    
+    <a href="/tags/angular-1-x/">angular-1-x</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      From Angular to Aurelia Part 2: Services
+    </h1>
+    <section class="post-content">
+      <p>Continuing the series about the move from <a href="http://pragmatic-coder.net/from-angular-to-aurelia-part1/">Angular 1.x to Aurelia</a> the second part is all about explaining the transition from Angular’s Service concepts.</p>
+<h2 id="Services-Factories-…-lazers-ninjas-and-foo"><a href="#Services-Factories-…-lazers-ninjas-and-foo" class="headerlink" title="Services, Factories, … lazers, ninjas and foo"></a>Services, Factories, … lazers, ninjas and foo</h2><p>One of the biggest complaints I often hear about Angular 1.x is the crazy naming for it’s concepts. Instead of having one unified way to name a certain features you get a band-wagon full of terms and concepts, most of the time sounding more complicated then they actually are. So let’s start out by first analyzing the status-quo of Angular’s service concepts.</p>
+<h3 id="Mother-of-Services-The-provide-object"><a href="#Mother-of-Services-The-provide-object" class="headerlink" title="Mother of Services: The $provide object"></a>Mother of Services: The $provide object</h3><p>To do so take a look at the following figure.<br><img src="/content/images/2015/04/angular_services.png" alt="Angular 1.x service concept"></p>
+<p>We start out with the <a href="https://docs.angularjs.org/api/auto/service/$provide" target="_blank" rel="noopener">$provide object</a> which’s purpose is to register other components during the module configuration phase by leveraging the <a href="https://docs.angularjs.org/api/auto/service/$injector" target="_blank" rel="noopener">$injector service</a>. It’s purpose is to create, load and retrieve a service instance. The actual creation of a service happens via service providers. Therefore $provide offers several methods, which more or less do the same thing, just on different abstraction levels. No matter which way you choose in the end the result is that Angular’s Dependency Injection cares about creating a singleton instance for your new service.</p>
+<h3 id="The-Service-Provider"><a href="#The-Service-Provider" class="headerlink" title="The Service Provider"></a>The Service Provider</h3><p>The actual service provider is a function named <a href="https://docs.angularjs.org/api/auto/service/$provide#provider" target="_blank" rel="noopener">provider</a> which may be used like this:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">app.provider(&apos;Demo&apos;, function () &#123;</span><br><span class="line">  return &#123;</span><br><span class="line">    $get: function () &#123;</span><br><span class="line">      return &#123;</span><br><span class="line">          // implement your logic here</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>As you see the function takes the name of the new service as first argument, followed by function which should return a object containing at least the property <code>$get</code>. This one is called during the initialization phase and should return the body of your service.</p>
+<p>By looking at the syntax one can clearly understand that this isn’t actually the most convenient way to declare services nevertheless it offers the most flexibility. So the next way to create a service is by utilizing a service factory, which more or less may be understood as the service blueprint — the service body. </p>
+<h3 id="Creating-a-Service-Blueprint"><a href="#Creating-a-Service-Blueprint" class="headerlink" title="Creating a Service Blueprint"></a>Creating a Service Blueprint</h3><p>The service blueprint comes in two flavors. The first is by using a <a href="https://docs.angularjs.org/api/auto/service/$provide#factory" target="_blank" rel="noopener">factory method</a> the other by working with a <a href="https://docs.angularjs.org/api/auto/service/$provide#service" target="_blank" rel="noopener">service class</a>. Now depending on who you ask there are wild speculations about why one approach is better then the other. Funny enough though they are essentially the same. Lets look at the implementation of the factory method.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">function factory(name, fn) &#123;</span><br><span class="line">    return provider(name, &#123; $get: fn &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>and here’s how you would create a service using it:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">app.factory(&apos;DemoFactory&apos;, function() &#123;</span><br><span class="line">  var privateMethod = function() &#123;</span><br><span class="line">    return &quot;DemoFactory&quot;;</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  return &#123;</span><br><span class="line">    publicMethod: function() &#123;</span><br><span class="line">      return privateMethod();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Note the example leverages the <a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript" target="_blank" rel="noopener">revealing module pattern</a></p>
+</blockquote>
+<p>Next we’ll look at the implementation of the service method:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">function service(name, constructor) &#123;</span><br><span class="line">    return factory(name, [&apos;$injector&apos;, function($injector) &#123;</span><br><span class="line">        return $injector.instantiate(constructor);</span><br><span class="line">    &#125;]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Again followed by how you’d create your own service with it:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">var DemoClass = function() &#123;</span><br><span class="line">  var privateMethod = function() &#123;</span><br><span class="line">    return &quot;DemoService&quot;;</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  return &#123;</span><br><span class="line">    publicMethod: function() &#123;</span><br><span class="line">      return privateMethod();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br><span class="line">app.service(&apos;DemoService&apos;, DemoClass);</span><br></pre></td></tr></table></figure>
+<p>So now that you’ve seen both of them you may judge by yourself. But it’s clear that in the end whatever you do, results in a provider. Also don’t let anybody fool you that you have to take X because Y is only doable that way :)</p>
+<blockquote>
+<p>There is one scenario where using the service method is benefitial, which is when it comes to using ES6 classes with NG1. Take a look at my <a href="https://github.com/zewa666/angular_es6" target="_blank" rel="noopener">angular_es6</a> repo showing how you can leverage JSPM, Babel and Gulp to work with modern language features.</p>
+</blockquote>
+<hr>
+<h2 id="Services-in-Aurelia"><a href="#Services-in-Aurelia" class="headerlink" title="Services in Aurelia"></a>Services in Aurelia</h2><p>I hope you’re still with me after reading through the Angular concepts, but be assured the Aurelia way is much shorter. Frankly it’s so short that the only thing you need to do is the following:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">export class MyService &#123;</span><br><span class="line">  constructor() &#123;</span><br><span class="line">  </span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  mySpecialMethod() &#123;</span><br><span class="line">  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>and use it in your ViewModel like this:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">import &#123;inject&#125; from &apos;aurelia-framework&apos;;</span><br><span class="line">import &#123;MyService&#125; from &apos;./my-service&apos;;</span><br><span class="line"></span><br><span class="line">@inject(MyService)</span><br><span class="line">export class HelloVM &#123;</span><br><span class="line">  constructor(myService) &#123;</span><br><span class="line">    // do your magic here</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>You might start to ask yourself where the registration API, a provider or whatever else is. And exactly this is one of the core concepts of Aurelia. Hide the complexity and actually any evidence of the framework itself as much as possible. A service in it’s essence is nothing else then a singleton of a VanillaJS class. So by exporting it and thus making it visible for the rest of the app you’re already done. The requester just has to leverage Aurelia’s Dependency Injection, which by default creates singletons of each class registered, and have it inject the instance into your constructor.</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>I hope to have given you an idea of both concepts. Decide for yourself which approach you like better and let me know what you think about it in the comments below.</p>
+<p><small>Photo credit: <a href="http://www.flickr.com/photos/8383928@N06/3937050845" target="_blank" rel="noopener">The Forgotten Memories Theatre</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a> <a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener">(license)</a></small></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/from-angular-to-aurelia-part-2-services/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/from-angular-to-aurelia-part-2-services/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/from-angular-to-aurelia-part-2-services/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/from-angular-to-aurelia-part-3-value-converters/">
+        ← From Angular to Aurelia Part 3: Value Converters
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/from-angular-to-aurelia-part1/">
+        From Angular to Aurelia Part 1 →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

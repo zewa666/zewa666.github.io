@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Generator-Aurelia update feature | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2015/08/yeoman-train.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2015-08-26T08:29:21.381Z" itemprop="datePublished">
+          2015-08-26
+      </time>
+    
+</span>
+    
+    <h1 class="post-title">
+      Generator-Aurelia update feature
+    </h1>
+    <section class="post-content">
+      <p>Today I’ve published a new version of the <a href="https://github.com/zewa666/generator-aurelia" target="_blank" rel="noopener">Aurelia Yeoman Generator</a> which introduces a nice feature to update your existing Aurelia app.</p>
+<p>In order to do that, open up a terminal/command line and navigate to the root-folder of your app. In there hit the following command:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yo aurelia:update</span><br></pre></td></tr></table></figure>
+<p>What this does is essentially running a <code>jspm install</code> command on each of the top-level dependencies.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">runJSPMUpdate: function() &#123;</span><br><span class="line">    var done = this.async();</span><br><span class="line">    var reps =</span><br><span class="line">      [&apos;aurelia-animator-css&apos;, &apos;aurelia-bootstrapper&apos;, &apos;aurelia-framework&apos;,</span><br><span class="line">       &apos;aurelia-dependency-injection&apos;, &apos;aurelia-binding&apos;,</span><br><span class="line">       &apos;aurelia-http-client&apos;, &apos;aurelia-router&apos;, &apos;aurelia-event-aggregator&apos;,</span><br><span class="line">       &apos;aurelia-history-browser&apos;, &apos;aurelia-loader-default&apos;,</span><br><span class="line">       &apos;aurelia-loader&apos;, &apos;aurelia-metadata&apos;, &apos;aurelia-route-recognizer&apos;,</span><br><span class="line">       &apos;aurelia-templating-binding&apos;, &apos;aurelia-templating-resources&apos;,</span><br><span class="line">       &apos;aurelia-templating-router&apos;, &apos;aurelia-templating&apos;, &apos;aurelia-logging&apos;,</span><br><span class="line">       &apos;aurelia-task-queue&apos;, &apos;aurelia-history&apos;, &apos;aurelia-path&apos;];</span><br><span class="line"></span><br><span class="line">    var allDone = [];</span><br><span class="line"></span><br><span class="line">    reps.forEach( function(repo) &#123;</span><br><span class="line">      allDone.push(jspm.install(repo));</span><br><span class="line">    &#125;.bind(this));</span><br><span class="line"></span><br><span class="line">    Promise.all(allDone).then( function() &#123;</span><br><span class="line">      this.log(&apos;Update done, enjoy!&apos;);</span><br><span class="line">      done();</span><br><span class="line">    &#125;.bind(this));</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>Of course this is not yet fully optimized, as the final result should open up the existing config.js and only update the used modules, but it’s a start.</p>
+<p>Hope this helps you out next time upgrading to the new release of the <a href="https://github.com/aurelia/skeleton-navigation" target="_blank" rel="noopener">skeleton navigation app</a></p>
+<p><small>Photo credit: <a href="http://www.flickr.com/photos/39670739@N05/9849959845" target="_blank" rel="noopener">Reading</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a></small></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/generator-aurelia-update-feature/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/generator-aurelia-update-feature/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/generator-aurelia-update-feature/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/dependency-injection-and-mocking-a-net-application/">
+        ← Dependency Injection and Mocking a WCF Service
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/from-angular-to-aurelia-part-4-page-lifecycle/">
+        From Angular to Aurelia Part 4: Page Lifecycle →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

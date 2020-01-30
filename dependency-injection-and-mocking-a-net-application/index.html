@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Dependency Injection and Mocking a WCF Service | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2015/09/autofac_moc_new.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2015-09-07T20:37:08.395Z" itemprop="datePublished">
+          2015-09-07
+      </time>
+    
+    
+    | 
+    <a href="/tags/c/">c</a>,
+    
+    <a href="/tags/net/">-net</a>,
+    
+    <a href="/tags/wcf/">wcf</a>,
+    
+    <a href="/tags/unit-testing/">unit-testing</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Dependency Injection and Mocking a WCF Service
+    </h1>
+    <section class="post-content">
+      <p>From times to times you get those basic questions that you feel are not worth asking, or should be understood by default. Well turns out as soon as you begin to explain the solution, you’ve lost yourself in the details.</p>
+<p>One of those questions I was recently asked was about Mocking WCF Services for Unit Tests. Most of the times I work on C# Projects, the infrastructure is already setup, so you tend just to use the stuff provided by a fellow architect. Although the question seems narrowed down, it does involve some more aspects. One of them is to choose how to structure your code so it gets testable. That was a nice opportunity to test out <a href="http://autofac.org/" target="_blank" rel="noopener">Autofac</a>, a fully featured Inversion of Control Container. As for the testing aspect I’ve chosen <a href="https://github.com/Moq/moq4" target="_blank" rel="noopener">Moq</a>, which is a very simplistic and yet powerful Mocking Library. So in order to provide a proper answer I’ve created a <a href="https://github.com/zewa666/csharp-ioc-moq" target="_blank" rel="noopener">GitHub Repository</a> depicting the whole story. It contains a <code>DemoService</code> which is a console application hosting a WCF Service, a <code>DemoApp</code> which consumes the Service and shows how to use the mentioned Libraries as well as a Unit Test project called <code>DemoApp_Test</code>.</p>
+<h2 id="Creating-a-simple-WCF-Service"><a href="#Creating-a-simple-WCF-Service" class="headerlink" title="Creating a simple WCF Service"></a>Creating a simple WCF Service</h2><p>Lets start with the service layer. The demonstrated service implements the following <code>ITheService</code> interface.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">DemoService</span></span><br><span class="line">&#123;</span><br><span class="line">	[<span class="meta">ServiceContract</span>]</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">ITheService</span></span><br><span class="line">	&#123;</span><br><span class="line">		[<span class="meta">OperationContract</span>]</span><br><span class="line">		<span class="function"><span class="keyword">string</span> <span class="title">RegisterPerson</span>(<span class="params">Person p</span>)</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[<span class="meta">DataContract</span>]</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Person</span> &#123;</span><br><span class="line">		[<span class="meta">DataMember</span>]</span><br><span class="line">		<span class="keyword">public</span> <span class="keyword">string</span> FirstName &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</span><br><span class="line">		[<span class="meta">DataMember</span>]</span><br><span class="line">		<span class="keyword">public</span> <span class="keyword">string</span> LastName &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>As we can see there is only one operation contract named <code>RegisterPerson</code> which takes a <code>Person</code> being a registered as a data contract and two data members first / lastname.</p>
+<p>Next lets take a look at the service implementation.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">DemoService</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">class</span> <span class="title">TheService</span> : <span class="title">ITheService</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">string</span> <span class="title">RegisterPerson</span>(<span class="params">Person p</span>)</span></span><br><span class="line"><span class="function"></span>		&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">string</span>.Format(<span class="string">"Successfully registered &#123;0&#125; &#123;1&#125;"</span>,</span><br><span class="line">				p.FirstName, p.LastName);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Nothing too spectacular happens here, as the method just returns a string with the details of the registered person.</p>
+<h2 id="Setting-up-Autofac-for-Dependency-Injection"><a href="#Setting-up-Autofac-for-Dependency-Injection" class="headerlink" title="Setting up Autofac for Dependency Injection"></a>Setting up Autofac for Dependency Injection</h2><p>OK so much for the service now its time to take a look at our demo application. We’ll start with the file <code>Program.cs</code>. First we’ll setup an Autofac container used for our dependency injection efforts. This is done by creating an instance of <code>ContainerBuilder</code></p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">DemoApp</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">class</span> <span class="title">Program</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"><span class="keyword">string</span>[] args</span>)</span></span><br><span class="line"><span class="function"></span>		&#123;</span><br><span class="line">			<span class="keyword">var</span> builder = <span class="keyword">new</span> ContainerBuilder();</span><br></pre></td></tr></table></figure>
+<p>Now the way how most of the .NET dependency injection systems work, is to register a specific type, which is provided when a given interface is requested. All of this should be done as close as possible to the root of the application, thus our <code>Main</code> function. In below example you’ll see that we register the concrete service implementation <code>TheServiceClient</code> — the WCF auto generated proxy — to be returned when <code>ITheService</code> is requested. </p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">builder.RegisterType&lt;MyService.TheServiceClient&gt;()</span><br><span class="line">	.As&lt;MyService.ITheService&gt;();</span><br></pre></td></tr></table></figure>
+<p>The app puts all its <em>massive</em> logic into a class named <code>Core</code>. We do also register that one with our DI-Container. The difference here, compared to the previous example is that we’re using <code>builder.Register</code> to register a concrete type vs. an interface abstraction. This method accepts lambda-expression as parameter, which defines how the specific class has to be instantiated. As you can see we do inject a <code>IComponentContext</code>, which I’ll explain a bit later, and the mentioned service into Core`s constructor. </p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">builder.Register&lt;Core&gt;(b =&gt; </span><br><span class="line">	<span class="keyword">new</span> Core(b.Resolve&lt;IComponentContext&gt;(),</span><br><span class="line">				b.Resolve&lt;DemoApp.MyService.ITheService&gt;()));</span><br></pre></td></tr></table></figure>
+<p>Over here we a similar thing with our very important business logic, which is excluded into its own class. What we additionally do here is to tell Autofac, to always return the same instance in the same <a href="http://docs.autofac.org/en/latest/lifetime/instance-scope.html" target="_blank" rel="noopener">instance scope</a>.<br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">builder.Register&lt;BusinessLogic.VeryImportantBusinessLogic&gt;(b =&gt;</span><br><span class="line">	<span class="keyword">new</span> VeryImportantBusinessLogic())</span><br><span class="line">		.InstancePerLifetimeScope();</span><br></pre></td></tr></table></figure></p>
+<p>After registering all of our types we can create the container instance using the builders <code>Build</code> method. After that lets use it to resolve an instance of <code>Core</code> and call its <code>Init</code> method and then wait for an user input to end the application. </p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">			IContainer Container = builder.Build();</span><br><span class="line"></span><br><span class="line">			Console.WriteLine(Container.Resolve&lt;Core&gt;().Init());</span><br><span class="line"></span><br><span class="line">			Console.WriteLine(<span class="string">"\nHit enter to exit ..."</span>);</span><br><span class="line">			Console.Read();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="V-E-R-Y-important-Business-Logic"><a href="#V-E-R-Y-important-Business-Logic" class="headerlink" title="V E R Y important Business Logic"></a>V E R Y important Business Logic</h2><p>Next lets take a quick look at the <code>VeryImportantBusinessLogic</code> which just provides a simple method <code>GetVIP</code>, returning an anonymous object with the first- and lastname of a Person. </p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">DemoApp.BusinessLogic</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">class</span> <span class="title">VeryImportantBusinessLogic</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">dynamic</span> <span class="title">GetVIP</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>        &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> &#123;</span><br><span class="line">                firstName = <span class="string">"Vildan"</span>,</span><br><span class="line">                lastName = <span class="string">"Softic"</span></span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Injecting-the-DI-Container"><a href="#Injecting-the-DI-Container" class="headerlink" title="Injecting the DI-Container"></a>Injecting the DI-Container</h2><p>So much for setting up our application, lets now take a look at Core’s implementation.<br>First we create the fields Service and Context which will hold the injected constructor instances. Speaking of that, you can see that the first parameter is the previously mentioned <code>IComponentContext</code>, which itself is the currently used Container for our scope. Now the next thing might not be the best design but was chosen to demonstrate, how you can resolve a dependency deeper in your code instead of having it injected to its constructor, which some would argue, defeats he purpose of IoT but at the same time reduces the number of necessary constructor parameters. We do resolve an instance of our important business logic and call its <code>GetVIP</code> method. The returned anonymous object is then passed on to <code>GeneratePerson</code> in order to return us an instance of <code>Person</code>, which we’re passing to the service method <code>RegisterPerson</code> and return its result.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">DemoApp.BusinessLogic</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Core</span></span><br><span class="line">    &#123;</span><br><span class="line">        IComponentContext context;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> ITheService Service &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Core</span>(<span class="params">IComponentContext context, ITheService srv</span>)</span></span><br><span class="line"><span class="function"></span>        &#123;</span><br><span class="line">            <span class="keyword">this</span>.Service = srv;</span><br><span class="line">            <span class="keyword">this</span>.context = context;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">string</span> <span class="title">Init</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>        &#123;</span><br><span class="line">            <span class="keyword">var</span> VIP = context.Resolve&lt;VeryImportantBusinessLogic&gt;()</span><br><span class="line">                           .GetVIP();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">this</span>.Service</span><br><span class="line">                 .RegisterPerson(</span><br><span class="line">                   <span class="keyword">this</span>.GeneratePerson(VIP.firstName, VIP.lastName)</span><br><span class="line">                 );</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Person <span class="title">GeneratePerson</span>(<span class="params"><span class="keyword">string</span> firstName, <span class="keyword">string</span> lastName</span>)</span></span><br><span class="line"><span class="function"></span>        &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> Person()</span><br><span class="line">            &#123;</span><br><span class="line">                FirstName = firstName,</span><br><span class="line">                LastName = lastName</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>So far you’ve seen how to leverage Autofac for dependency injection and how to possibly structure an application to make the best use of it. In order to try this out just set both the <code>DemoApp</code> and <code>DemoService</code> as Startup Projects and run the solution.</p>
+<h2 id="Testing-with-Moq"><a href="#Testing-with-Moq" class="headerlink" title="Testing with Moq"></a>Testing with Moq</h2><p>Having setup the service and demo application, its time to see how we can use Autofac inside an unit test and mock the service with Moq.</p>
+<blockquote>
+<p>When installing <code>Moq</code> and <code>Autofac.Extras.Moq</code> — the helper library for integrating Moq with Autofac — with Nuget, I got a version mismatch for Autofac. So in order to avoid that just simply manually install Autofac as well via Nuget.  </p>
+</blockquote>
+<p>After adding the necessary references <code>Autofac</code>, <code>Autofac.Extras.Moq</code> and <code>Moq</code> via NuGet, we can start writing our test. We setup our test by starting our environment under test conditions using <code>AutoMock.GetLoose</code>. What this does is essentially creating Mocks for every dependency registered and injecting those into constructors. This test is going to show that the method <code>RegisterPerson</code> is returning the proper result, yet not talking to the actual service. In order to do that, we’re going to Mock the method. We start by mocking the service, so that every request to the <code>ITheService</code> interface gets the mocked version. Then we <code>Setup</code> a mock for the specific method. Note the declaration of how we’d like to accept the first parameter. After that we define what the expected return value is, in our case a simple string leveraging information from the provided <code>Person</code> parameter.<br>Last but not least we can now create a mocked instance of our Core class and run the <code>Init</code> method, which will then internally call the mocked service method.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">[<span class="meta">TestMethod</span>]</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Should_Return_Registered_Person</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">using</span> (<span class="keyword">var</span> mock = AutoMock.GetLoose())</span><br><span class="line">	&#123;</span><br><span class="line">		mock.Mock&lt;DemoApp.MyService.ITheService&gt;()</span><br><span class="line">			.Setup(srv =&gt; srv.RegisterPerson(</span><br><span class="line">				It.IsAny&lt;DemoApp.MyService.Person&gt;()</span><br><span class="line">				))</span><br><span class="line">			.Returns&lt;DemoApp.MyService.Person&gt;(p =&gt;</span><br><span class="line">				<span class="string">"[MOCK] Successfully registered "</span> +</span><br><span class="line">					p.FirstName + <span class="string">" "</span> + p.LastName);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">var</span> sut = mock.Create&lt;DemoApp.BusinessLogic.Core&gt;();</span><br><span class="line">		Assert.AreEqual(<span class="string">"[MOCK] Successfully registered Vildan Softic"</span>,</span><br><span class="line">			sut.Init());</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>As you’ve seen the process to include AutoFac and Moq for dependency injection and service mocking, is not that hard and requires only a few configurations. The experience with using Autofac was pretty pleasant and their <a href="http://docs.autofac.org/en/latest/index.html" target="_blank" rel="noopener">docs</a> are full of good information. I was very happy that there is also a nice integration with Moq, which makes setting up unit tests very easy.</p>
+<p>I hope you enjoyed reading about this great combo and am looking forward to reading your questions and/or feedback below in the comments.</p>
+<p><small>photo credit: <a href="http://www.flickr.com/photos/38624633@N00/5510370724" target="_blank" rel="noopener">Laboratory</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a> <a href="https://creativecommons.org/licenses/by-nd/2.0/" target="_blank" rel="noopener">(license)</a></small></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/dependency-injection-and-mocking-a-net-application/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/dependency-injection-and-mocking-a-net-application/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/dependency-injection-and-mocking-a-net-application/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/click-and-longclick-with-rxjs/">
+        ← Click and Longclick with RxJS
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/generator-aurelia-update-feature/">
+        Generator-Aurelia update feature →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

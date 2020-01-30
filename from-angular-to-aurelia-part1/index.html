@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>From Angular to Aurelia Part 1 | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2015/04/3937050845_37c5233ac9_o.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2015-04-05T10:50:01.406Z" itemprop="datePublished">
+          2015-04-05
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>,
+    
+    <a href="/tags/angular-1-x/">angular-1-x</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      From Angular to Aurelia Part 1
+    </h1>
+    <section class="post-content">
+      <p>This is the begin of a blog series about moving to Aurelia from Angular 1.x. I’m going to explain how fundamental concepts of Angular 1.x map to Aurelia’s work flow. This should help you getting started with your new projects based on Aurelia.</p>
+<p>The first article is more about a business perspective and why Aurelia is a good choice to invest into. Please keep in mind that this is my personal opinion so read it, think about it and make up your own mind. If you have more questions visit our Gitter chat or leave a comment below.<br><a href="https://gitter.im/aurelia/discuss?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge" target="_blank" rel="noopener"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Join the chat at https://gitter.im/aurelia/discuss"></a></p>
+<h1 id="Why-Aurelia"><a href="#Why-Aurelia" class="headerlink" title="Why Aurelia?"></a>Why Aurelia?</h1><p>I’ve been involved with <a href="http://aurelia.io" target="_blank" rel="noopener">Aurelia</a> from the beginning of 2015 and so far I liked every aspect of it. It’s a modern approach to design a framework by leveraging a multitude of small packages. Each of them provides distinct features and is exchangeable. The sheer endless opportunities to customize and bend to framework to your will makes it in my opinion a perfect choice for enterprise apps. Why? Well each business is different. It’s good to know that you’re not forced into a certain direction. Having opportunities to adapt your tool to your process instead the other way around is what makes an important investment decision. On top of that Aurelia is backed by a dedicated company <a href="http://durandal.io/" target="_blank" rel="noopener">Durandal Inc.</a> which is going to make sure it stays that way.</p>
+<h1 id="What-happened-to-Angular-1-x"><a href="#What-happened-to-Angular-1-x" class="headerlink" title="What happened to Angular 1.x?"></a>What happened to Angular 1.x?</h1><p>As a software consultant so far I had a few customers placing high bets on Google’s Angular 1.x framework. I do like to work with Angular and i’ve even invested a lot of private time to come up with a <a href="http://pragmatic-coder.net/new-book-on-angularjs/">new book</a> brought out by O’Reilly in March 2015. So there was and I think still is a lot of buzz all around one of the first pioneers in SPA frameworks for large scaled applications. Still I must admit that Aurelia’s predecessor <a href="http://durandaljs.com/" target="_blank" rel="noopener">Durandal</a> was my first choice when it came to developing serious applications.</p>
+<p>Back to Angular though, we’ve all seen the misunderstanding that Google had with their Developer Community. I do understand that people tend to avoid changes likes the pest but having so much complaints about the new direction of Angular 2.x is not to be overseen. So from a business perspective I tend to believe that future investments in a highly risk-oriented framework won’t happen as easy as they did before.</p>
+<h1 id="What-should-we-do-next"><a href="#What-should-we-do-next" class="headerlink" title="What should we do next?"></a>What should we do next?</h1><p>The customers I mentioned all had a pretty straight forward question.</p>
+<blockquote>
+<p>We’re a backend shop, we like Java/.NET and need something stable and future proof on the frontend as well. What should we choose now that NG screwed up?</p>
+</blockquote>
+<p>This is the moment when you should step back and think about the next answer you are going to give. Personally I think a professional advice should try to answer not only the question but also the concerns and use cases driving it. So looking at the question I always try to highlight some interesting facts and think about them in detail:</p>
+<blockquote>
+<p>We’re a <strong>backend shop</strong>, we like Java/.NET <strong>(dev XP is important!)</strong> and need something <strong>stable</strong> and <strong>future proof</strong> on the frontend as well. What should we choose now that NG screwed up?</p>
+</blockquote>
+<p>A backend shop most likely has it’s focus on developing backend applications. That implies perhaps that investments in the frontend are second focus but a nasty thing they need to tackle. Having Java or .NET devs also indicates that they most likely do care about a proper Dev Experience since they are used to a wide range of good tool support and proven stacks. The demand for something stable tells me that they either didn’t have the time or will to search for the best fit. It’s understandable seeing how quickly the JavaScript world is changing. This is furthermore highlighted by demanding something future proof, which is a cry for certainty.</p>
+<h1 id="What-makes-a-good-candidate"><a href="#What-makes-a-good-candidate" class="headerlink" title="What makes a good candidate?"></a>What makes a good candidate?</h1><p>Having analyzed that question I think the following properties are key to success:</p>
+<ul>
+<li><em>Adaptability</em>: Which means having a way to change the framework itself</li>
+<li><em>Choice of languages</em>: VanillaJS or TypeScript — choose your poison</li>
+<li><em>Support</em>: Free stuff is good but sometimes you need first-class support</li>
+<li><em>High automatization</em>: Who really want’s to do all the boilerplate by himself?</li>
+<li><em>Freedom &amp; Flexibility</em>: Make your devs happy by breaking their chains</li>
+</ul>
+<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p>Aurelia is still young but given it’s age it already feels quite complete and offers a more then satisfying feeling when working with it. No matter to which of my colleagues I talked to each of them got the <em>Convention over Configuration</em> thingy and saw it’s immediate benefits.</p>
+<p>So is it the right choice? I for myself am definitely sure that Aurelia is going to be my framework of choice for upcoming projects.</p>
+<p>Looking forward to read your comments and perhaps meet you in Gitter</p>
+<p><small>Photo credit: <a href="http://www.flickr.com/photos/8383928@N06/3937050845" target="_blank" rel="noopener">The Forgotten Memories Theatre</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a> <a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener">(license)</a></small></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/from-angular-to-aurelia-part1/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/from-angular-to-aurelia-part1/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/from-angular-to-aurelia-part1/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/from-angular-to-aurelia-part-2-services/">
+        ← From Angular to Aurelia Part 2: Services
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/new-book-on-angularjs/">
+        New book on AngularJS →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

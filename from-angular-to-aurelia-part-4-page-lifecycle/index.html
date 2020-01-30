@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>From Angular to Aurelia Part 4: Page Lifecycle | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2015/07/3937050845_37c5233ac9_o.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2015-07-21T08:26:16.322Z" itemprop="datePublished">
+          2015-07-21
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>,
+    
+    <a href="/tags/angular-1-x/">angular-1-x</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      From Angular to Aurelia Part 4: Page Lifecycle
+    </h1>
+    <section class="post-content">
+      <p>This is the forth part of the From Angular to Aurelia Series. So far we have looked at <a href="http://pragmatic-coder.net/from-angular-to-aurelia-part-2-services/">Services</a>, as well as how to work with <a href="http://pragmatic-coder.net/from-angular-to-aurelia-part-3-value-converters/">Value Converters</a>. This time we’re going to look at page lifecycles.</p>
+<h2 id="Taking-control-over-your-page-display"><a href="#Taking-control-over-your-page-display" class="headerlink" title="Taking control over your page display"></a>Taking control over your page display</h2><p>When building a single page application you tend to require more control over the process of how a page is built, when it should be displayed and what kind of prerequisites must be fulfilled before its display. Coming from .NET Desktop development I always liked the idea of having predefined events or hooks available for specific states of the construction process. The JS-story on the other hand looks very different. There is no standard way and each framework follows its own pattern, if at all.</p>
+<p>So you might ask why do we need that at all? Lets consider a typical forms example. The following use cases are potentially interesting:</p>
+<ol>
+<li><strong>Given</strong> a User fills out a form, <strong>when</strong> he/she tries to navigate away <strong>then</strong> a reminder should ask the user for whether the entries should be discarded.</li>
+</ol>
+<ul>
+<li><strong>Given</strong> a User modifies an existing record, <strong>when</strong> he/she visits the edit form <strong>then</strong> the data should be prefetched <strong>and</strong> the form populated.</li>
+<li><strong>Given</strong> a page needs large amount of background data <strong>when</strong> it is discarded <strong>then</strong> memory has to be freed up properly. </li>
+<li><strong>Given</strong> a User tries to navigate to the form, <strong>when</strong> he/she is not logged in <strong>then</strong> the page shall not be assembled <strong>and</strong> a notification raised instead.</li>
+</ul>
+<p>Reading through the use cases we immediately recognize, that a lot of those are somehow connected to navigation instructions. Thus a perfect candidate to handle those events is the frameworks router. Page related stuff on the other hand might be available directly via the controller/viewmodel. Lets see how we would solve that with AngularJS.</p>
+<h2 id="Lifecycles-the-Angular-Way"><a href="#Lifecycles-the-Angular-Way" class="headerlink" title="Lifecycles the Angular-Way"></a>Lifecycles the Angular-Way</h2><p>OK so lets dig into how to achieve those things with Angular. You can find the sources and a preview on <a href="http://plnkr.co/edit/hWf3Qo120blIaAsBuUyq?p=preview" target="_blank" rel="noopener">Plunkr</a>. First off Angular does not offer a unified way to access page lifecycles, so as developer you have to use a mix of features to achieve what you want. Those involve on one side Router features as the <code>resolve</code> parameter for a route. The purpose of that is to inject dependencies into the requested route-controller. If any of those happen to be promises, the router is going to wait until they resolve or reject and only then continue execution. The other part are default router events when certain actions, like a navigation instruction, happen. Finally also the controllers scope triggers events, e.g. when the current controller is about to be destroyed.</p>
+<p>The app to demonstrate the use cases contains the following three pages. As first you see the home route containing simple links to the other two pages.</p>
+<pre><code>&lt;h1&gt;Welcome - DEMO PAGE&lt;/h1&gt;
+&lt;a href=&quot;#/form&quot;&gt;Go to form&lt;/a&gt;
+&lt;a href=&quot;#/secure&quot;&gt;Go to secure page&lt;/a&gt;
+</code></pre><p><em>Home page markup</em></p>
+<p>Our Form page contains a <code>form</code> with two textboxes for the first- and lastname as well as a save button.</p>
+<pre><code>&lt;section&gt;
+    &lt;h1&gt;Form&lt;/h1&gt;
+
+    &lt;form novalidate name=&quot;myForm&quot;&gt;
+        &lt;div class=&quot;form-group&quot;&gt;
+            &lt;label&gt;FirstName&lt;/label&gt;
+            &lt;input ng-model=&quot;ctrl.firstName&quot; type=&quot;text&quot;/&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;form-group&quot;&gt;
+            &lt;label&gt;LastName&lt;/label&gt;
+            &lt;input ng-model=&quot;ctrl.lastName&quot; type=&quot;text&quot;/&gt;
+        &lt;/div&gt;
+
+        &lt;button ng-click=&quot;ctrl.save()&quot;&gt;Save&lt;/button&gt;
+    &lt;/form&gt;
+&lt;/section&gt;
+
+&lt;div style=&quot;margin-top: 50px;&quot;&gt;
+    &lt;a href=&quot;#/&quot;&gt;Go to home&lt;/a&gt;
+&lt;/div&gt;
+</code></pre><p><em>Form page markup</em></p>
+<p>Last but not least the Secure page concludes the example by just displaying a simple greeting</p>
+<pre><code>&lt;h1&gt;Welcome to the secure page&lt;/h1&gt;
+</code></pre><p><em>Secure page markup</em></p>
+<h3 id="Angular-Use-case-1"><a href="#Angular-Use-case-1" class="headerlink" title="Angular: Use case 1"></a>Angular: Use case 1</h3><p>This use case is often seen as a friendly help for the user, which avoids unintended loss of data entry. As soon as a navigation instruction happens from the within the form page, we’d like to intercept the action and let the user confirm further execution.</p>
+<p>In order to do so, our form controller needs to listen for a globally broadcasted event called <code>$locationChangeStart</code>, provided by the ngRoute module. This is done by using the scopes <code>$on</code> method, which accepts the name of the event as first and a callback as second parameter. The callback additionally gets the current navigation instruction <code>event</code>. In there we check whether the form has been modified and then ask the user to confirm whether he wants to discard the changes and continue the navigation process, otherwise halt the execution using <code>event.preventDefault</code>.</p>
+<pre><code>app.controller(&apos;FormController&apos;, function($scope) {
+    this.firstName = &quot;&quot;;
+    this.lastName  = &quot;&quot;;
+
+    this.save = function() {
+        if(!$scope.myForm.$pristine) {
+            alert(&apos;Data is saved !&apos;);
+        } else {
+            alert(&apos;No data modified !&apos;);
+        }
+    };
+
+    $scope.$on(&apos;$locationChangeStart&apos;, function canDeactivate(event) {
+        if(!$scope.myForm.$pristine) {
+            var result = confirm(&apos;Do you really want to discard your changes?&apos;);
+            if (!result) {
+                event.preventDefault();
+            }
+        }
+    });
+});
+</code></pre><p><em>Form controller listening for the $locationChangeStart event</em></p>
+<h3 id="Angular-Use-case-2"><a href="#Angular-Use-case-2" class="headerlink" title="Angular: Use case 2"></a>Angular: Use case 2</h3><p>Now on to something that is really often necessary. A data edit form. In order to use that, we’d need to prefetch the data and pass it over to the form. What we’d like to do though, is get the data before the page itself is rendered, so that we don’t start out with a blank and then suddenly filled form.</p>
+<p>Here we can leverage the previously mentioned <code>resolve</code> parameter, to inject async data into our controller. As part of the route configuration, this happens inside a config function where we a specify the behavior of our router. The second route is the one we’re looking at. Resolve takes an object, where each key-value pair will be injected later on to the declared <code>FormController</code>. As said if the return value of the resolving method is a promise, the router will wait for it to resolve or reject.</p>
+<pre><code>app.config(function config($routeProvider) {
+    $routeProvider
+        .when(&apos;/&apos;, {
+            templateUrl: &apos;templates/home.html&apos;,
+            controller: &apos;HomeController&apos;,
+            controllerAs: &apos;ctrl&apos;
+        })
+        .when(&apos;/form&apos;, {
+            templateUrl: &apos;templates/form.html&apos;,
+            controller: &apos;FormController&apos;,
+            controllerAs: &apos;ctrl&apos;,
+            resolve: {
+                data: function(dataService) {
+                    return dataService.getData();
+                }
+            }
+        })
+});
+</code></pre><p><em>The apps route configuration for passing prefetched data to the FormController</em></p>
+<p>The used <code>dataService</code> is a simple factory, which by default auto-resolves with user-object containing the first- and lastname as properties.</p>
+<pre><code>app.factory(&quot;dataService&quot;, function($q){
+    return {
+        getData: function(){
+            return $q.when({ firstName: &apos;Vildan&apos;, lastName: &apos;Softic&apos;});
+        }
+    };
+});
+</code></pre><p><em>A simple Data Service as factory</em></p>
+<p>Now all we need to do is to modify the FormController to accept the newly injected data and bind that to our <code>ng-model</code>-observed properties.</p>
+<pre><code>app.controller(&apos;FormController&apos;, function($scope, data) {
+    this.firstName = data.firstName;
+    this.lastName = data.lastName; 
+</code></pre><p><em>injecting resolved service and binding its data to observed properties</em></p>
+<h3 id="Angular-Use-case-3"><a href="#Angular-Use-case-3" class="headerlink" title="Angular: Use case 3"></a>Angular: Use case 3</h3><p>Now this might not be the typical user story, discussed with your client, but nevertheless can become equally important when working with large data structures and tons of references which need to be freed up.</p>
+<p>The process of Angular is to throw away the complete controller as soon as a new navigation instruction occurs. All your cleanup and persistence task therefore should happen, when a special event is broadcasted. That one is called <code>$destroy</code>. As depicted in the next listing, all you need to do is listen to the event via the controller <code>$scope</code> and perform your cleanup or persistence logic in there.</p>
+<pre><code>app.controller(&apos;FormController&apos;, function($scope, data) {
+
+    ...
+
+    $scope.$on(&apos;$destroy&apos;, function deactivate() {
+        alert(&apos;Goodbye data has been cleaned up !&apos;);
+    });
+});
+</code></pre><p><em>performing cleanup and persistence logic on controller destruction</em></p>
+<h3 id="Angular-Use-case-4"><a href="#Angular-Use-case-4" class="headerlink" title="Angular: Use case 4"></a>Angular: Use case 4</h3><p>OK this last one is a typical scenario used throughout web apps with secure content, only authorized users should have access to. There are multiple ways to achieve such a task, but since we’re talking about lifecycle events lets see how to do it this way. We’ve already looked at the route-resolver in the second use case in order to execute code before a controller loads. Now we will leverage that to register a authentication-helper for our secure page. We setup another route via the route provider along a new resolve property called <code>auth</code>. It gets an authentication-service injected which, simply for the demo, returns an <code>isLoggedIn</code> method, returning a Boolean value. Based on the result we return an either resolved or rejected promise.</p>
+<pre><code>$routeProvider
+    ...
+    .when(&apos;/secure&apos;, {
+        templateUrl: &apos;templates/secure.html&apos;,
+        controller: &apos;SecureController&apos;,
+        controllerAs: &apos;ctrl&apos;,
+        resolve: {
+            auth: function(authService, $q) {
+                var result = authService.isLoggedIn();
+
+                if(result) {
+                    alert(&apos;Access granted !&apos;);
+                    return $q.when(true);
+                } else {
+                    return $q.reject(false);
+                }
+
+            }
+        }
+    });
+</code></pre><p><em>setting up an authentication route guard</em></p>
+<p>The mentioned authentication-service can be seen here. As you see for the sake of the demo it will always return false.</p>
+<pre><code>app.factory(&quot;authService&quot;, function(){
+    return {
+        user: &apos;&apos;,
+        isLoggedIn: function(){
+            return this.user !== &apos;&apos;;
+        }
+    };
+});
+</code></pre><p><em>a sample authentication service</em></p>
+<p>So far we only created the resolver but still need to handle the relocation in case of unauthorized access. Instead of doing that for each controller, we may use the <code>$rootScope</code> to achieve that on a more general basis. For doing so we need to create a <code>module.run</code> block and inject the <code>$rootScope</code> as well as the <code>$location</code> service. That being done we now can listen to the global <code>$routeChangeError</code> event, triggered because of the rejected resolver method. The 4th parameter does contain the rejected message, in our case the Boolean false. If that’s the case, we now may notify our users about their trespassing and reroute them to wherever we’d like.</p>
+<pre><code>app.run(function( $rootScope, $location ) {
+    $rootScope.$on(&quot;$routeChangeError&quot;, function(event, current, previous, isLoggedIn) {
+        if (isLoggedIn === false) {
+            alert(&apos;Access prohibited !&apos;);
+            $location.path(&quot;/&quot;);
+        }
+    });
+});
+</code></pre><p><em>global redirection in case of unauthorized routes</em></p>
+<h2 id="Lifecycles-the-Aurelia-Way"><a href="#Lifecycles-the-Aurelia-Way" class="headerlink" title="Lifecycles the Aurelia-Way"></a>Lifecycles the Aurelia-Way</h2><p>Now that we’ve seen how AngularJS handles those use cases lets move on to Aurelia’s way. One important note right at the beginning is that Aurelia as usual tries to unify processes and expose it’s API in a meaningful way. So instead of having different endpoints, events and constructs like resolvers, you’ll be pleased to see that all of that works as you’d might expect directly from within your page.<br>As before you can find all of the code and a live preview on <a href="http://plnkr.co/edit/f4WtJl2FkLGLAvHaXuPX" target="_blank" rel="noopener">Plunkr</a></p>
+<h3 id="Aurelia-Use-case-1"><a href="#Aurelia-Use-case-1" class="headerlink" title="Aurelia: Use case 1"></a>Aurelia: Use case 1</h3><p>The basic idea when performing operations on the pages lifecycle with Aurelia is that you declare all steps by implementing hooks. Those are simply functions, following a certain naming-convention, now when Aurelia’s router invokes the ViewModel it will check out whether you’ve implemented one or more of those hooks and call them at the appropriate time.</p>
+<p>Lets see how the first use case is done with Aurelia. We have VM called <code>Form</code> which simply implements the <code>canDeactivate</code> hook. As the name suggests this gets called as soon as you try to navigate away from the current page and a new navigation instruction is created.</p>
+<pre><code>export class Form {
+
+    canDeactivate() {
+      if(!this.isPristine()) {
+          var result = confirm(&apos;Do you really want to discard your changes?&apos;);
+          return result;
+      }
+    };
+}
+</code></pre><h3 id="Aurelia-Use-case-2"><a href="#Aurelia-Use-case-2" class="headerlink" title="Aurelia: Use case 2"></a>Aurelia: Use case 2</h3><p>How about the second use case you ask? Well typically as said we want to load the data before the UI assembles. Thus the perfect hook to be used is named <code>activate</code>, which gets called upon instantiating the VM. We start by first importing and then injecting our <code>DataService</code> and assigning it to a property inside the constructor. Now as mentioned we implement the activate hook. An important thing to note here is that we return the promise returned by <code>getData</code> as this hints Aurelia to wait for the activation phase until the promise resolved.</p>
+<pre><code>import {DataService} from &apos;./services&apos;;
+import {inject} from &apos;aurelia-framework&apos;
+
+@inject(DataService)
+export class Form {
+
+    constructor(dataService) {
+      this.dataService = dataService;
+    }
+
+    activate() {
+      return this.dataService.getData().then( (data) =&gt; {
+        this.firstName = data.firstName;
+        this.lastName = data.lastName;
+      });
+    }
+
+    ...
+}
+</code></pre><h3 id="Aurelia-Use-case-3"><a href="#Aurelia-Use-case-3" class="headerlink" title="Aurelia: Use case 3"></a>Aurelia: Use case 3</h3><p>Deactivation logic you ask? Well you guessed it, implement a hook named <code>deactivate</code>.</p>
+<pre><code>...
+
+export class Form {
+
+    ...
+
+    deactivate() {
+        alert(&apos;Goodbye data has been cleaned up !&apos;);
+    };
+
+}
+</code></pre><p>Nothing more to say about that :)</p>
+<h3 id="Aurelia-Use-case-4"><a href="#Aurelia-Use-case-4" class="headerlink" title="Aurelia: Use case 4"></a>Aurelia: Use case 4</h3><p>Now lets conclude the story with our 4th use case. If you think about what we’re trying to do, its checking whether its allowed to activate a given VM. So following the naming convention the hook we’re searching for is called <code>canActivate</code>. </p>
+<p>Lets take a look at the Secure page. In here we import our AuthService and inject it to the VM. Now as mentioned before we implement the canActivate hook, which simply checks like in the Angular example whether the user is logged in and if not shows a notification. In order to redirect the user to a different page all we need to do is import the <code>Redirect</code> navigation command and return that from our hook. The first parameter is the <code>url</code> we’d like to direct the user to.</p>
+<pre><code>import {inject} from &apos;aurelia-framework&apos;;
+import {Redirect} from &apos;aurelia-router&apos;;
+import {AuthService} from &apos;./services&apos;
+
+@inject(AuthService)
+export class Secure {
+
+  constructor(auth) {
+    this.auth = auth;
+  }
+
+  canActivate() {
+    if (this.auth.isLoggedIn() === false) {
+      alert(&apos;Access prohibited !&apos;);
+      return new Redirect(&apos;&apos;);
+
+    } else 
+    return true;
+  }
+}
+</code></pre><h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>After comparing the two examples you can see that both frameworks offer a way to fulfill our use cases. The difference though is that Aurelia focuses on a streamlined process, which not only offers a simple API by implementing hooks but also by leaving nothing but clean and readable code. That results in a much lesser learning curve and in increased maintainability. If you want to learn more about Aurelia’s Screen Activation Lifecycle, visit the <a href="http://aurelia.io/docs.html#the-screen-activation-lifecycle" target="_blank" rel="noopener">docs</a> or check by the official <a href="https://gitter.im/Aurelia/Discuss#" target="_blank" rel="noopener">gitter room</a> where tons of community members just wait to help you out. </p>
+<p><small>Photo credit: <a href="http://www.flickr.com/photos/8383928@N06/3937050845" target="_blank" rel="noopener">The Forgotten Memories Theatre</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a> <a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener">(license)</a></small></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/from-angular-to-aurelia-part-4-page-lifecycle/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/from-angular-to-aurelia-part-4-page-lifecycle/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/from-angular-to-aurelia-part-4-page-lifecycle/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/generator-aurelia-update-feature/">
+        ← Generator-Aurelia update feature
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/back-from-dwx/">
+        Back from DWX →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

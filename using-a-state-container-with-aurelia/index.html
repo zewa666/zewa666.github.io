@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Using a state container with Aurelia | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2017/04/assembling-a-bicycle-1727903_1280.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2017-04-30T18:12:16.858Z" itemprop="datePublished">
+          2017-04-30
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>,
+    
+    <a href="/tags/redux/">redux</a>,
+    
+    <a href="/tags/rxjs/">rxjs</a>,
+    
+    <a href="/tags/composition/">composition</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Using a state container with Aurelia
+    </h1>
+    <section class="post-content">
+      <p>We can’t ignore the ever growing importance of changing paradigms. No matter whether we talk about social, political or software development matters. Web frontend development has seen an increasing interest in predictable state containers, introduced by concepts like Flux and made popular by Redux. On par with this, the trend to a more functional style, particularly component composition, has changed the way how we think of building applications nowadays. Each idea for itself may not be that important or world changing at the first look, but put together they can provide a great developer experience. I’m not to judge whether it’s a better approach compared to well-known concepts, such as MVVM and classic services, rather I’d like to share an approach which helps you to combine both worlds in order to get the best of both.</p>
+<p>This article talks about the concepts, actual code and a full example <a href="https://github.com/zewa666/aurelia-hoc-store" target="_blank" rel="noopener">can be found over at GitHub</a>. Sources, including templates, are fully commented to explain design choices and the repo’s README will propose an file order in which you should review. As such we won’t waste time on implementation details, like the use of RxJS here, but get straight to understanding the concept.</p>
+<h2 id="A-modern-development-approach"><a href="#A-modern-development-approach" class="headerlink" title="A modern development approach"></a>A modern development approach</h2><p>… leverages a single store, which acts as a fundamental basis. The idea is that it holds all data, that makes up your application. The content of your store is your application’s state. If you will, the app state is a snapshot of data at a specific moment in time. In functional terms, if we would represent our whole application with a single function <code>renderApp</code>, the state would be the argument we pass in.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">function renderApp(state): RenderedApplication</span><br></pre></td></tr></table></figure>
+<p>If we would produce only static sites, without any interaction, we’d already be good and could stop work here. Most of nowadays apps though, provide a plethora of interactions. So if the state is a snapshot at a specific time, an event can be seen as the trigger that changes our state from current to new. Such a user interaction, therefore, can be compared to a reducer, which <em>modifies</em> the current state by applying instructions from a certain action.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">function userInteraction(oldState, ...actionInstructions): NewState</span><br></pre></td></tr></table></figure>
+<p>Modification though is a dangerous world. If we change the original source, how would we know the difference between the new and old state? As such immutability is a key aspect of modern approaches, as it maintains the original source and creates a modified copy of your new state. So a current becomes the old state and the interaction is creating the next current state.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CURRENT STATE           --&gt; USER INTERACTION                  </span><br><span class="line">--&gt; NEW STATE </span><br><span class="line"></span><br><span class="line">renderApp(currentState) --&gt; userInteraction(currentState, ...)</span><br><span class="line">--&gt; renderApp(newState)</span><br></pre></td></tr></table></figure>
+<p>Past, current and the future are thus snapshots of state after a given amount of actions. Keeping this in mind we can change the current state also in the backward direction, by reversing actions and thus traveling back to a previous state.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">NEW (aka CURRENT STATE)  --&gt; USER INTERACTION * -1         </span><br><span class="line">--&gt; CURRENT (aka OLD STATE)</span><br><span class="line"></span><br><span class="line">renderApp(newState)      --&gt; userInteraction(newState, ...)</span><br><span class="line">--&gt; renderApp(currentState)</span><br></pre></td></tr></table></figure>
+<p>The interesting aspect is that the functional call sequence does not change, but only their inputs do.<br>As such we can conclude that a state is solely influenced by actions. Therefore, given a specific input, we can always expect the same output, which reflects the idea of pure components.</p>
+<h2 id="A-single-controlled-store"><a href="#A-single-controlled-store" class="headerlink" title="A single controlled store"></a>A single controlled store</h2><p>… thus starts to make sense, since if we can constrain all changes to a single place, we maintain control over the result, thus the rendering of our app. That is our store. Now solutions like Redux force you to design and create your application in a given rigid manner. This might not ultimately fit your idea of how you’d like to design your application. Another important thing is that if people are feeling uncomfortable to change behaviors and adapt to new paradigms, corporate enterprise does so even less. As such applying a fundamentally different approach to an existing software, might not work in an all-in style.</p>
+<p>Developers working with Aurelia often have a solid understanding of the MVVM pattern, which most of the times promotes Services as a best practice to keep your business logic separated from your UI logic. Combined with Aurelia’s dependency injection we get singleton instance handling actions. Yet the constraint of a store is missing as a service by itself does not dictate where and how you should access and modify your data. Does the service keep the state? Do you only allow to modify it via setters and access it via getters? This openness is a blessing and a curse at the same time, as it permits to build your applications structure the way you want, except if you really don’t have the time nor the interest in thinking about it :)</p>
+<h2 id="Using-service-methods-as-store-actions"><a href="#Using-service-methods-as-store-actions" class="headerlink" title="Using service methods as store actions"></a>Using service methods as store actions</h2><p>… is thus a way to maintain data access through services and not having to change our overall existing application architecture. Instead of injecting the service, you inject the store. Instead of accessing service methods, you subscribe to changes of the single state and trigger actions on the store, which call service methods by themselves and update the state and therefore trigger a redraw.</p>
+<p><img src="/content/images/2017/04/diagram_state.png" alt="Process of how components interact with the store"><br><small>How components interact with the store</small></p>
+<h2 id="Rendering-applications-with-components"><a href="#Rendering-applications-with-components" class="headerlink" title="Rendering applications with components"></a>Rendering applications with components</h2><p>… is done in Aurelia by using custom elements. Similar to React and other functional reactive programming (FRP) oriented frameworks, it allows doing component composition in an easy manner. Working with a single state will suddenly make you embrace the notion of Dumb vs Smart components and Higher-Order Components (HOC). Why? Well, let’s start with the HOC. Its sole purpose is to reference and sync the single state and propagate either itself or its actions and partial data to its child components via inputs.</p>
+<p>In Aurelia this means you’ll gonna be using a custom element, which injects the store and creates a subscription to its changes <a href="https://github.com/zewa666/aurelia-hoc-store/blob/master/src/developer/developer-overview.ts" target="_blank" rel="noopener">(HOC VM example)</a>. The state reference then is passed on to smart elements and the partial data, along possible actions to dumb elements <a href="https://github.com/zewa666/aurelia-hoc-store/blob/master/src/developer/developer-overview.html" target="_blank" rel="noopener">(HOC View example)</a>.</p>
+<p>The difference between a smart and dumb component/element is determined by whether it has knowledge of the store, or is completely isolated from the rest of the app and gets all data passed on via inputs/attributes. Later ones are decoupled from their environment and thus can be reused more easily. As a rule of thumb, if you want to create simple presentational components, which only render data provided and pass on callbacks to the given actions, then you want to go with dumb components. If a component, on the other hand, is not going to be reused in other places and has more complex UI state to handle, you’ll likely want to use smart components. Keep their count as small as possible though.</p>
+<h2 id="…"><a href="#…" class="headerlink" title="…"></a>…</h2><p>This is quite a lot information for the beginning. I’d recommend now taking a look at the mentioned <a href="https://github.com/zewa666/aurelia-hoc-store" target="_blank" rel="noopener">example at GitHub</a>. If you have questions, feel free to post your comment below.</p>
+<p>photo credit: <a href="https://pixabay.com/photo-1727903/" target="_blank" rel="noopener">ihuikhh: Assembling a bicycle</a> via <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.de" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/using-a-state-container-with-aurelia/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/using-a-state-container-with-aurelia/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/using-a-state-container-with-aurelia/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/setup-protractor-e2e-tests-with-aurelia-cli-apps/">
+        ← Setup Protractor E2E Tests with Aurelia CLI Apps
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/custom-element-scoped-translations/">
+        Custom element scoped translations →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

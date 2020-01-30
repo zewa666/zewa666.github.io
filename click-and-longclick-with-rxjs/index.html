@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Click and Longclick with RxJS | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2016/03/finger.jpg)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2016-03-08T13:50:53.775Z" itemprop="datePublished">
+          2016-03-08
+      </time>
+    
+    
+    | 
+    <a href="/tags/javascript/">javascript</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Click and Longclick with RxJS
+    </h1>
+    <section class="post-content">
+      <p>It has been quite a while since I have written my last article. There has been tons of work, private things going on and overall too less time to do fun stuff. I’ve also joined <a href="http://www.ranorex.com/" target="_blank" rel="noopener">Ranorex</a> as a senior developer. Ranorex is providing a product for UI automation of desktop, web and mobile applications. The work has so far provided a lot of opportunities to try out new stuff and get in touch with other technologies.</p>
+<p>Recently I’ve been working a lot with the Reactive Extensions (Rx) for JavaScript, a library for composing asynchronous and event-based apps using observable sequences. A rather important fact is the focus on events, which makes it an ideal candidate for working with modern web applications, powered by alternative gestures and usage of shortcut keys. One of those gestures I was working on was a longer lasting click, lets call it <code>longclick</code>.</p>
+<h2 id="Why-RxJS"><a href="#Why-RxJS" class="headerlink" title="Why RxJS"></a>Why RxJS</h2><p>First of all lets discuss why RxJS is a good choice for this type of tasks. There are already tons of concepts like Promises, Event-Listeners, Callbacks and many more which help you to work with asynchronous tasks and occurring DOM events. RxJS essentially tries to unify all those concepts into something called Streams. Now instead of rephrasing other sources let me re-post here what I think is one of the best explanations of what is going on, which is part of the freely available <a href="https://xgrommx.github.io/rx-book/content/guidelines/introduction/index.html#reactive-programming-is-programming-with-asynchronous-data-streams" target="_blank" rel="noopener">Rx-Book</a>:</p>
+<blockquote>
+<p>In a way, this isn’t anything new. Event buses or your typical click events are really an asynchronous event stream, on which you can observe and do some side effects. Reactive is that idea on steroids. You are able to create data streams of anything, not just from click and hover events. Streams are cheap and ubiquitous, anything can be a stream: variables, user inputs, properties, caches, data structures, etc. For example, imagine your Twitter feed would be a data stream in the same fashion that click events are. You can listen to that stream and react accordingly.</p>
+</blockquote>
+<blockquote>
+<p>On top of that, you are given an amazing toolbox of functions to combine, create and filter any of those streams. That’s where the “functional” magic kicks in …</p>
+</blockquote>
+<p><small>Reactive Programming is programming with asynchronous data streams: <a href="https://xgrommx.github.io/rx-book/content/guidelines/introduction/index.html#reactive-programming-is-programming-with-asynchronous-data-streams" target="_blank" rel="noopener">GitBook Rx-Book</a></small></p>
+<h2 id="How-to-capture-a-longclick"><a href="#How-to-capture-a-longclick" class="headerlink" title="How to capture a longclick"></a>How to capture a longclick</h2><p>If we think of a longclick we quickly realize that it is a stream sequence as depicted by the following diagram.  </p>
+<pre><code>        eventStream: ---md-------------------lc----|-&gt;
+                           [ delay of 700ms]
+interruptingMouseUp: ----------mu-| X |--------mu--|-&gt;
+</code></pre><p><small>Longclick diagram</small></p>
+<p>It starts with a trigger of a <code>mousedown</code> event. Now if the mouse is kept pressed for a duration of 700ms the result is a longclick. If on the other hand in the meantime a <code>mouseup</code> event occurs, the user didn’t wait long enough and thus triggered a simple click.</p>
+<p>The html we’ll use for the demo is pretty simple, consisting of a header displaying the click or longclicked item, followed by three divs acting as click targets.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">h1</span>&gt;</span>Captured event: <span class="tag">&lt;<span class="name">span</span> <span class="attr">id</span>=<span class="string">"captured_event"</span>&gt;</span>None<span class="tag">&lt;/<span class="name">span</span>&gt;</span><span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>Item 1<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>Item 2<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>Item 3<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>Now lets focus on the code. First we get a reference to the clickable <code>divs</code>. Next we have a boolean stating whether a longClick has been detected which by default is not the case. The <code>longclick</code> is essentially the previously mentioned diagram. The primary source are mousedown events on the target divs. Note that we use <a href="https://github.com/Reactive-Extensions/RxJS-DOM" target="_blank" rel="noopener">Rx.DOM</a> as a helper library to get up and running with DOM event listening quicker. Next we need to transform each item of the stream using a flatmap. We first add a class to the body called <code>spinner</code> which will set the <code>cursor</code> property to <code>pointer</code>, thus signaling the begin of a longclick. The flatmap returns observables, which themselve return the original <code>MouseEvent</code>. Now if a delay of 700 ms is reached before a mouseup event happens the actions counts a full longclick.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> divs = <span class="built_in">document</span>.querySelectorAll(<span class="string">"div"</span>);</span><br><span class="line"><span class="keyword">let</span> longClickDetected = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> longClick = Rx.DOM.mousedown(divs, <span class="literal">null</span>, <span class="literal">true</span>)</span><br><span class="line">	.flatMap(<span class="function">(<span class="params">e</span>) =&gt;</span> &#123;</span><br><span class="line">		<span class="built_in">document</span>.body.classList.add(<span class="string">"spinner"</span>);</span><br><span class="line">		<span class="keyword">return</span> Rx.Observable</span><br><span class="line">			.return(e)</span><br><span class="line">			.delay(<span class="number">700</span>)</span><br><span class="line">			.takeUntil(Rx.Observable.fromEvent(<span class="built_in">document</span>.body, <span class="string">"mouseup"</span>));</span><br><span class="line">	&#125;);</span><br></pre></td></tr></table></figure>
+<p>After defining the longClick stream, we can subscribe. On each item we now declare a longClick as detected, remove the spinner and update the header element with the target items <code>textContent</code>.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">longClick.subscribe(<span class="function">(<span class="params">longClick</span>) =&gt;</span> &#123;</span><br><span class="line">	longClickDetected = <span class="literal">true</span>;</span><br><span class="line">	<span class="built_in">document</span>.body.classList.remove(<span class="string">"spinner"</span>);</span><br><span class="line">	<span class="built_in">document</span>.getElementById(<span class="string">"captured_event"</span>)</span><br><span class="line">		.innerHTML = <span class="string">`Longclick on <span class="subst">$&#123;longClick.target.textContent&#125;</span>`</span>;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>At the same time we also subscribe to a simple click event and revert the longClickDetected boolean in case it was previously set by a longclick. This needs to be done because the longclick will actually also fire a normal click event as well. The next time though a simple click happens we can update the header element again and state that a normal click happened.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Rx.DOM.click(divs, <span class="literal">null</span>, <span class="literal">true</span>).subscribe(<span class="function">(<span class="params">clickEvent</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> (longClickDetected) &#123;</span><br><span class="line">		longClickDetected = <span class="literal">false</span>;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">document</span>.body.classList.remove(<span class="string">"spinner"</span>);</span><br><span class="line">	<span class="built_in">document</span>.getElementById(<span class="string">"captured_event"</span>)</span><br><span class="line">		.innerHTML = <span class="string">`Click on <span class="subst">$&#123;clickEvent.target.textContent&#125;</span>`</span>;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>You can see the full code <a href="http://codepen.io/zewa666/pen/pgMOBj/" target="_blank" rel="noopener">RxJS longclick and click</a> on <a href="http://codepen.io" target="_blank" rel="noopener">CodePen</a>.</p>
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
+
+<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p>So I hope that you’ve seen the benefit of RxJS and how it can help you to achieve cool things with DOM Events. As always I’m happy about your feedback which you may just leave as a comment below. </p>
+<p>photo credit: <a href="http://www.flickr.com/photos/78189858@N07/22035286029" target="_blank" rel="noopener">Maurizio Viroli: principi fondamentali</a> via <a href="http://photopin.com" target="_blank" rel="noopener">photopin</a> <a href="https://creativecommons.org/licenses/by-nc-nd/2.0/" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/click-and-longclick-with-rxjs/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/click-and-longclick-with-rxjs/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/click-and-longclick-with-rxjs/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/the-endless-war-of-javascript-frameworks/">
+        ← The Endless War of JavaScript Frameworks
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/dependency-injection-and-mocking-a-net-application/">
+        Dependency Injection and Mocking a WCF Service →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>

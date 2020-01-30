@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Installing The Aurelia-I18N Plugin in a CLI App | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2016/08/continents.png)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2016-08-11T07:21:31.801Z" itemprop="datePublished">
+          2016-08-11
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Installing The Aurelia-I18N Plugin in a CLI App
+    </h1>
+    <section class="post-content">
+      <p>The new hotness with Aurelia is the brand new CLI Tool. It helps you to create a new project easily by just asking you a few questions and on you go. Since I saw this request few times, here is a short intro in how to install the Aurelia-I18N plugin in your newly created CLI Application.</p>
+<p>First you want to install the plugin via npm:</p>
+<p><code>npm install aurelia-i18n</code></p>
+<p>Since Aurelia-I18N is backed by i18next, you should install it and a backend plugin of your choice. As an example we’re going to leverage the i18next-xhr-backend:</p>
+<p><code>npm install i18next i18next-xhr-backend</code></p>
+<p>After that we need to tell our CLI App about the new dependencies. To do so we’re going to open the file <em>aurelia_project/aurelia.json</em> and scroll down to section named <em>dependencies</em>. In there add the following three entries:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"name"</span>: <span class="string">"i18next"</span>,</span><br><span class="line">  <span class="attr">"path"</span>: <span class="string">"../node_modules/i18next/dist/umd"</span>,</span><br><span class="line">  <span class="attr">"main"</span>: <span class="string">"i18next"</span></span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"name"</span>: <span class="string">"aurelia-i18n"</span>,</span><br><span class="line">  <span class="attr">"path"</span>: <span class="string">"../node_modules/aurelia-i18n/dist/amd"</span>,</span><br><span class="line">  <span class="attr">"main"</span>: <span class="string">"aurelia-i18n"</span></span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"name"</span>: <span class="string">"i18next-xhr-backend"</span>,</span><br><span class="line">  <span class="attr">"path"</span>: <span class="string">"../node_modules/i18next-xhr-backend/dist/umd"</span>,</span><br><span class="line">  <span class="attr">"main"</span>: <span class="string">"i18nextXHRBackend"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Great, now following the official <a href="https://github.com/aurelia/i18n#how-to-install-this-plugin" target="_blank" rel="noopener">Aurelia-I18N Guide</a> we create a folder in the root of your app named <em>locales</em>.</p>
+<blockquote>
+<p>You have to put the folder into the root (on same level as <em>src</em>) as this is the hosted root of your app</p>
+</blockquote>
+<p>In there add subfolders for each language you’d like to support, eg <em>en</em> and <em>de</em> for English and German language.</p>
+<p>Inside of each of those folders create a file named <em>translation.json</em> with your translation keys and values. Follow the official guide for detailed info.</p>
+<p>Last but not least it’s time to wire up the plugin inside your app. Therefore go to your <em>src/main.js</em> file and configure it as follows.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**********************************************/</span></span><br><span class="line">/          add the necessary imports           /</span><br><span class="line"><span class="comment">/**********************************************/</span></span><br><span class="line"><span class="keyword">import</span> environment <span class="keyword">from</span> <span class="string">'./environment'</span>;</span><br><span class="line"><span class="keyword">import</span> Backend <span class="keyword">from</span> <span class="string">'i18next-xhr-backend'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Configure Bluebird Promises.</span></span><br><span class="line"><span class="comment">//Note: You may want to use environment-specific configuration.</span></span><br><span class="line"><span class="built_in">Promise</span>.config(&#123;</span><br><span class="line">  warnings: &#123;</span><br><span class="line">    wForgottenReturn: <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">configure</span>(<span class="params">aurelia</span>) </span>&#123;</span><br><span class="line">  aurelia.use</span><br><span class="line">    .standardConfiguration()</span><br><span class="line">    .feature(<span class="string">'resources'</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (environment.debug) &#123;</span><br><span class="line">    aurelia.use.developmentLogging();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (environment.testing) &#123;</span><br><span class="line">    aurelia.use.plugin(<span class="string">'aurelia-testing'</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**********************************************/</span></span><br><span class="line">  /             register the plugin              /</span><br><span class="line">  <span class="comment">/**********************************************/</span></span><br><span class="line">  aurelia.use.plugin(<span class="string">'aurelia-i18n'</span>, (instance) =&gt; &#123;</span><br><span class="line">    <span class="comment">// register backend plugin</span></span><br><span class="line">    instance.i18next.use(Backend);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> instance.setup(&#123;</span><br><span class="line">      backend: &#123;                                  </span><br><span class="line">        loadPath: <span class="string">'./locales/&#123;&#123;lng&#125;&#125;/&#123;&#123;ns&#125;&#125;.json'</span>, </span><br><span class="line">      &#125;,</span><br><span class="line">      lng : <span class="string">'de'</span>,</span><br><span class="line">      attributes : [<span class="string">'t'</span>,<span class="string">'i18n'</span>],</span><br><span class="line">      fallbackLng : <span class="string">'en'</span>,</span><br><span class="line">      debug : <span class="literal">false</span></span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  aurelia.start().then(<span class="function"><span class="params">()</span> =&gt;</span> aurelia.setRoot());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Now you should be all set to start using the features of Aurelia-I18N inside your app.</p>
+<p>As always, I’m happy about reading your comments below</p>
+<p>photo credit: <a href="https://pixabay.com/de/kontinente-flaggen-silhouetten-1055960/" target="_blank" rel="noopener">Gerd Altmann: Kontinente Flaggen Silhouetten</a> via <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> <a href="https://creativecommons.org/licenses/by-nc-nd/2.0/" target="_blank" rel="noopener">(license)</a></p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/installing-the-aurelia-i18n-plugin-in-a-cli-app/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/installing-the-aurelia-i18n-plugin-in-a-cli-app/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/installing-the-aurelia-i18n-plugin-in-a-cli-app/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/blog-posts-on-sitepoint/">
+        ← Blog posts on SitePoint
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/the-endless-war-of-javascript-frameworks/">
+        The Endless War of JavaScript Frameworks →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>
