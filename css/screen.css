@@ -677,6 +677,12 @@ figure.highlight figcaption {
     padding: 7px 10px;
     font-size: .8em;
 }
+figure.highlight figcaption span {
+    font-weight: bold;
+}
+figure.highlight figcaption a {
+    float: right;
+}
 figure.highlight table {
     margin: 0;
 }

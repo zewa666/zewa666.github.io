@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>Enforted - Building a game with style(sheets) | Pragmatic Coder</title>
+  <meta name="description" content="Keeping things understandable ... most of the time" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic|Open+Sans:700,400" />
+
+  <meta name="generator" content="Pragmatic Coder">
+
+  
+  
+  
+
+  
+  
+  <script type="text/javascript">
+    var gaProperty = 'UA-61457743-1';
+    var disableStr = 'ga-disable-' + gaProperty;
+    if (document.cookie.indexOf(disableStr + '=true') > -1) {
+      window[disableStr] = true;
+    }
+    
+    function gaOptout() {
+      document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      window[disableStr] = true;
+    }
+  </script>
+  <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-61457743-1', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+
+  </script>
+  
+
+</head>
+
+
+<body class="post-template">
+
+  
+  <header class="site-head" style="background-image: url(/content/images/2020/01/enforted_logo.png)">
+    
+</header>
+  
+  
+<main class="content" role="main">
+  <article class="post">
+    
+      <span class="post-meta">
+      <time datetime="2020-02-16T08:00:50.000Z" itemprop="datePublished">
+          2020-02-16
+      </time>
+    
+    
+    | 
+    <a href="/tags/aurelia/">aurelia</a>,
+    
+    <a href="/tags/enforted/">enforted</a>
+    
+    
+</span>
+    
+    <h1 class="post-title">
+      Enforted - Building a game with style(sheets)
+    </h1>
+    <section class="post-content">
+      <p>This is the second article of the Enforted series, demonstrating my learnings about SCSS, BEM and Flex used to build the board game. To see the other articles, hop over to <a href="https://pragmatic-coder.net/enforted-the-beginning/#Enough-talking-what-about-the-technical-part">the intro’s overview</a>.</p>
+<h2 id="Building-a-board-game-with-style-sheets"><a href="#Building-a-board-game-with-style-sheets" class="headerlink" title="Building a board game with style(sheets)"></a>Building a board game with style(sheets)</h2><p>For a design-limited person like me, creating the board’s layout certainly turned out to be one of the hardest challenges. The idea was to have a monopoly-like board but with two lanes. The outer would represent the lower value resources while the inner would host the less available precious ones.</p>
+<p>I also wanted the game to be optimized for mobile devices, so responsive design was a given. The inner me of course already said <em>yeah sure, all the way display: block and floats</em>. Now admit you haven’t thought the same ;) Turns out flexbox would be the better choice though since in the end so many little subtleties are handled nicely with flex features.</p>
+<p>Without further ado, here’s what the HTML of the board looks like on a shallow level along with a screenshot for better understanding.</p>
+<figure class="highlight html"><figcaption><span>Boards html layout</span><a href="https://github.com/zewa666/enforted/blob/master/src/board/board.html" target="_blank" rel="noopener">See the source on GitHub</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- the boards component --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">board</span> <span class="attr">class</span>=<span class="string">"app_board board"</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- outer lane's rows (top,center,bottom) --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__row board__row--top"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__row board__row--center"</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!-- outer lane's center row columns (left,center,right) --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__col board__col--left"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__col board__col--center"</span>&gt;</span></span><br><span class="line">            <span class="comment">&lt;!-- inner lane's rows (top,center,bottom) --&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__row board__row--top"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__row board__row--center"</span>&gt;</span></span><br><span class="line">                <span class="comment">&lt;!-- inner lane's center row columns --&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__col board__col--left"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__col board__col--center"</span>&gt;</span></span><br><span class="line">                    <span class="comment">&lt;!-- the fortress --&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">fortress</span> <span class="attr">class</span>=<span class="string">"board__fortress fortress"</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">fortress</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__col board__col--right"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__row board__row--bottom"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__col board__col--right"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"board__row board__row--bottom"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">board</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/content/images/2020/02/board-design.png" alt="The boards design"></p>
+<blockquote>
+<p>Did you notice the torn-paper-border of the screenshot? Yeah I know it’s perhaps a bit too much, but I was so thrilled finally finding <a href="https://launchpad.net/shutter" target="_blank" rel="noopener">Shutter</a> to be a real alternative to ScreenPresso or Macs built-in Preview.app for image capturing/quick editing on Linux(Ubuntu), so I had to try out one of their built-in plugins ;)</p>
+</blockquote>
+<p>So one of the nice things with flex is that you can define the <code>flex-direction</code> which will impact how elements are going to be stacked. The default is <code>row</code>, which means a horizontal stack of items whereas <code>column</code>, you guessed it, is the vertical layout. This is exactly what’s being used for the columns of the center row as an example.</p>
+<figure class="highlight scss"><figcaption><span>Flex-direction in action</span><a href="https://github.com/zewa666/enforted/blob/master/src/board/_board.scss#L26-L31" target="_blank" rel="noopener">See the source on GitHub</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&amp;__col &#123;∂</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    &amp;--<span class="attribute">left</span>,</span><br><span class="line">    &amp;--<span class="attribute">right</span> &#123;</span><br><span class="line">      <span class="attribute">display</span>: flex;</span><br><span class="line">      <span class="attribute">flex-direction</span>: column;</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>But aside from that, there is one additional thing that would have driven me crazy for sure when designing with floats. The bottom row of tiles is created with the order of the tiles <code>1 -&gt; 2 -&gt; 3 -&gt; n</code> in DOM but actually should be rendered the opposite way <code>n &lt;- 3 &lt;- 2 &lt;- 1</code>. So as the tiles are rendered via repeats from an array of tiles we could store the tiles in the exact order in the array. The problem here though is that calculations for dice rolls and player/monster progression are assuming the right linear order of tiles. Flexbox has us covered here with the <code>flex-flow</code> property which allows us to set the value <code>row-reverse</code>. Now that is super slick.<br><figure class="highlight scss"><figcaption><span>Reversing the order of the rows</span><a href="https://github.com/zewa666/enforted/blob/master/src/board/_board.scss#L13-L15" target="_blank" rel="noopener">See the source on GitHub</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&amp;__row &#123;</span><br><span class="line">    <span class="attribute">display</span>: flex;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    &amp;--<span class="attribute">bottom</span> &#123;</span><br><span class="line">      <span class="attribute">flex-flow</span>: row-reverse;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>I’m not even going to dive into things like <code>justify-content: center</code> and <code>align-items: center</code> which finally solve one of mankind’s biggest challenges in a simple and flex-order-aware!!! way.</p>
+<p><img src="/content/images/2020/02/css-center-align-meme.jpg" alt="When you realize you can use flex to vertically align stuff"></p>
+<blockquote>
+<p>found somewhere on <a href="https://memegenerator.net" target="_blank" rel="noopener">memegenerator.net</a> while Cloudflare said no with Error 522 :(</p>
+</blockquote>
+<h2 id="SCSS-and-BEM-a-dream-team"><a href="#SCSS-and-BEM-a-dream-team" class="headerlink" title="SCSS and BEM, a dream team"></a>SCSS and BEM, a dream team</h2><p>If you’ve been living on the other side of the moon for a couple of years, chances are you haven’t yet heard about SCSS (Sass) or any other CSS pre-processor. In short, writing vanilla CSS nowadays really isn’t the way to go any longer. Sure if you’re more on the CSSinJS department, you might found an alternative but even then you’re using something more capable. SCSS, the css-flavored style of Sass, is a widely used pre-processor that allows several urgently missing features such as selector nesting, partials, mixins and operators. Take a look at the <a href="https://sass-lang.com/guide" target="_blank" rel="noopener">official tutorial</a> which should give you a good idea about its features.</p>
+<p>Where SCSS really shines though is in combination with the naming methodology BEM, which stands for Block, Element and Modifier. Again the <a href="http://getbem.com/introduction/" target="_blank" rel="noopener">projects introduction page</a> does a relatively good job of giving you an idea of what it is about. In essence, the biggest benefit are the resulting selectors with the least possible specificity. That means, if done right, you’ll never need to see <code>!important</code> again nor will you experience side-effects from other components. And all of that without having to use scoped css. Yes, the amount of characters for a typical class name gets longer but that cost is outweighed by the benefits you reap from the approach. Plus, being a methodology, every BEM project, with minor custom adaptions, will be structured the same for every project you encounter.</p>
+<p>Let’s take a look at BEM and SCSS in combination in the code listing below. We can see that the block <code>app</code> has three elements <code>sidebar</code>, <code>board</code> and <code>toggle-sidebar</code> all indicated by the double underscores and neatly grouped by the nesting. Furthermore, the <code>sidebar</code> has the modifiers <code>visible</code> and <code>hidden</code>, which indicate the state of the sidebar. For some parts like the pseudo-selector <code>:focus</code> you might very well escape the strict naming convention just to find another gem like the <code>mq-desktop</code> mixin, which <a href="https://github.com/zewa666/enforted/blob/master/style/_helpers.scss" target="_blank" rel="noopener">simply wraps</a> the given content with <code>@media (min-width: 1281px)</code>.</p>
+<figure class="highlight scss"><figcaption><span>The app components scss</span><a href="https://github.com/zewa666/enforted/blob/master/src/_app.scss" target="_blank" rel="noopener">See the source on GitHub</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.app</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: flex;</span><br><span class="line">  <span class="attribute">height</span>: <span class="number">100vh</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> auto;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100vw</span>;</span><br><span class="line"></span><br><span class="line">  &amp;__sidebar &#123;</span><br><span class="line">    <span class="attribute">flex-grow</span>: <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    &amp;--visible &#123;</span><br><span class="line">      <span class="attribute">display</span>: flex;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &amp;--hidden &#123;</span><br><span class="line">      <span class="attribute">display</span>: none;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &amp;__board &#123;</span><br><span class="line">    <span class="attribute">flex-grow</span>: <span class="number">22</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &amp;__toggle-sidebar &#123;</span><br><span class="line">    <span class="attribute">background-color</span>: <span class="variable">$toggle-cbar-btn-bg</span>;</span><br><span class="line">    <span class="attribute">border</span>: none;</span><br><span class="line">    <span class="attribute">color</span>: <span class="variable">$toggle-cbar-btn-fg</span>;</span><br><span class="line"></span><br><span class="line">    &amp;::-moz-focus-inner &#123;</span><br><span class="line">      border: <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    &amp;:focus &#123;</span><br><span class="line">      <span class="attribute">outline</span>: none;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @<span class="keyword">include</span> mq-desktop &#123;</span><br><span class="line">      <span class="attribute">display</span>: none;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  @<span class="keyword">include</span> mq-desktop &#123;</span><br><span class="line">    <span class="attribute">height</span>: <span class="number">50vw</span>;</span><br><span class="line">    <span class="attribute">margin</span>: <span class="number">10px</span> auto;</span><br><span class="line">    <span class="attribute">width</span>: <span class="number">80vw</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The later brings us to one crucial aspect of designing a game suitable both for mobile and desktop and that is a mobile-first design. If you noticed, the height, margin and width for the block have been defined at the beginning with mobile viewport sizes in mind. But with the mixin, we, later on, overload the values for a desktop specific viewport. The same happens for the <code>toggle-sidebar</code> button, where we can decide to remove the feature for larger screens.</p>
+<p>Now as an example, applying the necessary BEM classes for the sidebar component would look like the following. We start with the element - part of the <code>app</code> block, followed by the elements modifiers, conditionally applied.</p>
+<figure class="highlight html"><figcaption><span>BEM classes for the apps sidebar element</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">sidebar</span> <span class="attr">class</span>=<span class="string">"app__sidebar $&#123;!sidebarVisible ? 'app__sidebar--hidden' : 'app__sidebar--visible')&#125;"</span>&gt;</span><span class="tag">&lt;/<span class="name">sidebar</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>This might be repetitive and there is also potential to mix either the double underscores or dashes up. So I came up with a new Aurelia plugin called <a href="https://github.com/zewa666/aurelia-bem" target="_blank" rel="noopener">aurelia-bem</a> and here is what it makes the above now look like. The global view function <code>bem</code> takes a block as the first argument, the element as its second and either a single or an array of modifiers as the third parameter. Once rendered it will turn it exactly to the sample shown previously.</p>
+<figure class="highlight html"><figcaption><span>BEM classes for the apps sidebar applied with the Aurelia Bem plugin</span><a href="https://github.com/zewa666/enforted/blob/master/src/app.html" target="_blank" rel="noopener">See the source on GitHub</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">sidebar</span> <span class="attr">class</span>=<span class="string">"$&#123;bem('app', 'sidebar', !sidebarVisible ? 'hidden' : 'visible')&#125;"</span>&gt;</span><span class="tag">&lt;/<span class="name">sidebar</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="What-you-can-automate-you-don’t-need-to-remember"><a href="#What-you-can-automate-you-don’t-need-to-remember" class="headerlink" title="What you can automate you don’t need to remember"></a>What you can automate you don’t need to remember</h2><p>I’m a big fan of automating all the things for development wherever I can as it reduces the cognitive overhead and issues due to repetitive tasks. One great type of tools to support you writing proper code, guided by a set of rules, are linters. For frontend development, these come in the flavor of either TSLint or ESlint for TypeScript and respectively JavaScript, although lately TSLint got officially discontinued but offers a migration path towards ESLint. Well, the same thing is also possible with CSS and SCSS using tools like <a href="https://github.com/stylelint/stylelint" target="_blank" rel="noopener">Stylelint</a>.</p>
+<p>The previously mentioned Aurelia Bem plugin comes also with a set of customized and opinionated rules for this type of setup. The game makes use of these by extending the plugin’s rules in the <code>.stylelintrc.json</code> config file while overriding some ignoredSelectors for the max specificity rule:</p>
+<figure class="highlight json"><figcaption><span>Stylelint configuration for Enforted</span><a href="https://github.com/zewa666/enforted/blob/master/.stylelintrc.json" target="_blank" rel="noopener">See the source on GitHub</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"extends"</span>: <span class="string">"./node_modules/aurelia-bem/.stylelintrc.json"</span>,</span><br><span class="line">  <span class="attr">"rules"</span>: &#123;</span><br><span class="line">    <span class="attr">"selector-max-specificity"</span>: [</span><br><span class="line">      <span class="string">"0,1,0"</span>,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">"ignoreSelectors"</span>: [</span><br><span class="line">          <span class="string">":visited"</span>,</span><br><span class="line">          <span class="string">":active"</span>,</span><br><span class="line">          <span class="string">":hover"</span>,</span><br><span class="line">          <span class="string">":link"</span>,</span><br><span class="line">          <span class="string">":focus"</span>,</span><br><span class="line">          <span class="string">"::-moz-focus-inner"</span></span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Besides that, <a href="https://github.com/zewa666/enforted/blob/master/package.json#L68-L71" target="_blank" rel="noopener">this set of dependencies</a> needs to be installed as devDependencies.</p>
+<p>Now the linter will start shouting at you, whenever you try something that isn’t very BEM-like like using anything besides classes as a selector or nesting them too deep. Oh and of course no use of <code>!important</code> ;)</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>I must admit that I was scared about this part the most when creating the game since my design skills are far from what I’d like. But it turned out, that with skimming through some articles and playing around with flexbox, it was all in all not as bad as thought. Once again, I fell in love with the combo of SCSS and BEM and definitely wouldn’t want to miss them on any future project, while Stylelint constantly reminded me of things so I don’t need to keep them around in my head.<br>I’m sure there is enough room for debate on whether CSS Modules are the better way, or why not using CSS grid instead. Looking forward to the comments about your preferences.</p>
+
+      
+      <script src="https://utteranc.es/client.js" repo="zewa666/zewa666.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" label="Blog comment" async>
+      </script>
+      
+    </section>
+    <footer class="post-footer">
+      
+      <section class="author">
+    <h4>Vildan Softic</h4>
+    <p>Vildan Softic is a consultant and software developer from Austria. He is passionate about developing Single Page Applications, grinding LOB Apps with .NET and is pushing towards Node.JS development.</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?url=http://pragmatic-coder.net/enforted-all-things-ui/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://pragmatic-coder.net/enforted-all-things-ui/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://pragmatic-coder.net/enforted-all-things-ui/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+      
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/enforted-state-management/">
+        Enforted - Handling game state with Aurelia Store →
+    </a>
+    
+</nav>
+</main>
+
+  
+<footer class="site-footer">
+  
+  <div class="inner">
+     <a href="/impressum-legal-notice.html">Impressum / Legal notice</a>
+     <section class="copyright"><a href="http://pragmatic-coder.net">Pragmatic Coder</a> © 2018 This page is using Google Analytics, in order to opt-out click 
+      <a onclick="alert('Google Analytics has been deactivated');" href="javascript:gaOptout()">here</a></section>
+     <section class="poweredby">Blog picture <a href="http://creativecommons.org/licenses/by-sa/2.0/">creative commons licensed ( BY-SA )</a> 
+      <a title="Pragmatic phone operator" href="https://www.flickr.com/photos/2ni/6779068688">Pragmatic phone operator</a> - <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+
+
+
+
+
+
+</body>
+</html>
